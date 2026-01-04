@@ -1,0 +1,6 @@
+services:
+  web-connected:
+    image: devopsdockeruh/simple-web-service
+    command: /bin/sh -c 'server'
+    ports:
+      - 8080:8080
