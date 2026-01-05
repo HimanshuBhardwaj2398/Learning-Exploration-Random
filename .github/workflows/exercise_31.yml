@@ -25,6 +25,6 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
-        context: .\devops\helsinki-docker-mooc\material-applications\express-app
+        context: ./devops/helsinki-docker-mooc/material-applications/express-app
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/beermapping:latest
