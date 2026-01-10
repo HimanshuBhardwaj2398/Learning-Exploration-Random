@@ -1,0 +1,20 @@
+FROM golang:1.16
+
+WORKDIR /usr/src/backend
+
+COPY . .
+
+RUN go build && \
+    go test ./... && \
+    useradd -m appuser && \
+    chown -R appuser:appuser /usr/src/backend && \
+    go clean -cache && \
+    rm -rf /var/lib/apt/lists/*
+
+USER appuser
+
+ENV PORT=8080 REQUEST_ORIGIN=http://localhost:8000
+
+EXPOSE 8080
+
+CMD ["./server"]
