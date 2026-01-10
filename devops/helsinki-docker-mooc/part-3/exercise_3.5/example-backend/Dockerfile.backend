@@ -1,15 +1,23 @@
-FROM golang:1.16
+FROM golang:1.16-alpine AS build
 
 WORKDIR /usr/src/backend
 
 COPY . .
 
-RUN go build && \
-    go test ./... && \
-    useradd -m appuser && \
-    chown -R appuser:appuser /usr/src/backend && \
-    go clean -cache && \
-    rm -rf /var/lib/apt/lists/*
+ENV CGO_ENABLED=0
+
+RUN go build -o server && \
+    go test ./...
+
+FROM alpine:latest
+
+WORKDIR /usr/src/backend
+
+RUN adduser -D appuser
+
+COPY --from=build /usr/src/backend/server .
+
+RUN chown -R appuser:appuser /usr/src/backend
 
 USER appuser
 

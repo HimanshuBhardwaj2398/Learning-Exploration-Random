@@ -1,12 +1,10 @@
-FROM node:16
+FROM node:16-alpine
 
 WORKDIR /usr/src/app
 
-RUN useradd -m appuser && \
+RUN adduser -D appuser && \
     chown appuser:appuser /usr/src/app && \
-    npm install -g serve && \
-    npm cache clean --force && \
-    rm -rf /var/lib/apt/lists/*
+    npm install -g serve
 
 COPY --chown=appuser:appuser . .
 
