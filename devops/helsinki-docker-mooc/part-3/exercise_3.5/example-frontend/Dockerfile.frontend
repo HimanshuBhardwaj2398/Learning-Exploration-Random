@@ -1,21 +1,31 @@
-FROM node:16-alpine
+# ============ STAGE 1: BUILD ============
+# This stage compiles our React app into static files
+FROM node:16-alpine AS build-stage
 
 WORKDIR /usr/src/app
 
-RUN adduser -D appuser && \
-    chown appuser:appuser /usr/src/app && \
-    npm install -g serve
+# Copy package files first (for better caching)
+COPY package*.json ./
 
-COPY --chown=appuser:appuser . .
+# Install dependencies
+RUN npm install
 
-USER appuser
+# Copy source code
+COPY . .
 
+# Set the backend URL environment variable Must be set BEFORE build, React bakes it into the static files
 ENV REACT_APP_BACKEND_URL="http://localhost:8080"
 
-RUN npm install && \
-    npm run build && \
-    npm cache clean --force
+# Build the app - creates the build/ folder
+RUN npm run build
 
-EXPOSE 5000
+# ============ STAGE 2: SERVE ============
+# Using nginx-alpine (~20MB) instead of node-alpine (~110MB)
+FROM nginx:alpine
 
-CMD ["serve", "-s", "-l", "5000", "build"]
+# Copy ONLY the build folder from Stage 1 to nginx's default serve directory
+COPY --from=build-stage /usr/src/app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

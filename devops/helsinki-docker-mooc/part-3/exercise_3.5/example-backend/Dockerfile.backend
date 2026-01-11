@@ -1,28 +1,28 @@
+# ============ STAGE 1: BUILD ============
 FROM golang:1.16-alpine AS build
 
 WORKDIR /usr/src/backend
 
 COPY . .
 
+# CGO_ENABLED=0 ensures a fully static binary (no C dependencies)
+# -ldflags="-s -w" strips debug info to reduce binary size
 ENV CGO_ENABLED=0
 
-RUN go build -o server && \
+RUN go build -ldflags="-s -w" -o server && \
     go test ./...
 
-FROM alpine:latest
+# ============ STAGE 2: RUN ============
+# scratch = completely empty image (0 bytes)
+FROM scratch
 
-WORKDIR /usr/src/backend
+# Copy the compiled binary from build stage
+COPY --from=build /usr/src/backend/server /server
 
-RUN adduser -D appuser
-
-COPY --from=build /usr/src/backend/server .
-
-RUN chown -R appuser:appuser /usr/src/backend
-
-USER appuser
-
+# Set environment variables
 ENV PORT=8080 REQUEST_ORIGIN=http://localhost:8000
 
 EXPOSE 8080
 
-CMD ["./server"]
+# Run the binary directly (no shell needed)
+CMD ["/server"]

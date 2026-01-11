@@ -1,0 +1,39 @@
+# ============================================
+# OPTIMIZED DOCKERFILE FOR PYTHON HELLO APP
+# ============================================
+# Optimizations applied:
+# 1. Alpine base image (~50MB vs ~150MB slim)
+# 2. Combined RUN commands (fewer layers)
+# 3. Non-root user created before COPY
+# 4. Removed HEALTHCHECK (reduces complexity)
+# 5. Minimal pip install flags
+# ============================================
+
+FROM python:3.11-alpine
+
+WORKDIR /app
+
+# Environment variables (combined)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Single RUN command: create user + install dependencies
+# This reduces layers and image size
+COPY requirements.txt .
+
+RUN adduser -D -u 1000 appuser && \
+    pip install --no-cache-dir -r requirements.txt && \
+    chown -R appuser:appuser /app
+
+# Copy application code (after deps for better caching)
+COPY --chown=appuser:appuser app.py .
+
+# Switch to non-root user BEFORE exposing port
+USER appuser
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
