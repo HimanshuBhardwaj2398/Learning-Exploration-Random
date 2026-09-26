@@ -10,7 +10,8 @@ Concept topics are numbered in study order. Each has a one-page README and a mar
 | # | Topic | Kind | Status | Notebook | Also |
 | --- | --- | --- | --- | --- | --- |
 | 01 | [Decorators](01-decorators/README.md) | concept | learning | [decorators.py](01-decorators/decorators.py) | [lab: Rebinding say_whee](01-decorators/rebinding-say-whee.html) |
+| 02 | [Object-oriented Python](02-oop/README.md) | concept | new | [oop.py](02-oop/oop.py) | — |
 <!-- topics:end -->
 
 ## Planned
-OOP and the data model (`__init__`, `@property`, descriptors, dunder methods) · iterators and generators · context managers · typing and dataclasses · async basics.
+Iterators and generators (the `__iter__` from the OOP notebook, made lazy) · context managers (`__enter__` / `__exit__`) · descriptors in depth · typing and Protocols · async basics.

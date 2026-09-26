@@ -726,7 +726,7 @@ def _(mo):
     - [functools docs](https://docs.python.org/3/library/functools.html): `wraps`, `cache`, `lru_cache`, `singledispatch`
     - *Fluent Python* (Ramalho), ch. 9: decorators and closures, the definitive treatment
 
-    **Next:** OOP, where `@property`, `@classmethod` and descriptors open up.
+    **Next:** [Object-oriented Python](https://himanshubhardwaj2398.github.io/Learning-Exploration-Random/notebooks/oop.html), where `@property`, `@classmethod` and attribute lookup open up.
     """)
     return
 

@@ -12,7 +12,7 @@
 | Area | What's in it | Topics |
 | --- | --- | --- |
 | [DSA](DSA/README.md) | Coding-interview patterns and single-question deep dives in Python, each with a marimo notebook you can run in the browser. | 4 |
-| [Python](python/README.md) | The language itself, from first principles: how names, functions, objects and the data model actually work. | 1 |
+| [Python](python/README.md) | The language itself, from first principles: how names, functions, objects and the data model actually work. | 2 |
 <!-- areas:end -->
 
 ## Work on it locally
