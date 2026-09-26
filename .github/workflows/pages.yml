@@ -1,0 +1,86 @@
+# Lints, tests and publishes the learning site (see WORKFLOW.md and docs/adr/0001).
+# Pull requests get the checks and a trial build; only main deploys.
+#
+# One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+
+name: Learning site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "DSA/**"
+      - "python/**"
+      - "web/**"
+      - "learnkit/**"
+      - "templates/**"
+      - "tools/**"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "DSA/**"
+      - "python/**"
+      - "web/**"
+      - "learnkit/**"
+      - "templates/**"
+      - "tools/**"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch: # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# PR runs cancel older runs of the same PR; deploys from main queue instead of cancelling.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint notebooks
+        run: marimo check --strict DSA python templates
+
+      - name: Test (answer keys, step-throughs, bug galleries, tools)
+        run: pytest
+
+      - name: Check README indexes are current
+        run: python tools/catalog.py --check
+
+      - name: Build site (exports every notebook to WebAssembly)
+        run: python tools/build_site.py --out _site
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
