@@ -207,6 +207,11 @@ def home_body(areas: list[Area], notebooks: dict[str, str]) -> str:
 def export_notebooks(out: Path, areas: list[Area]) -> dict[str, str]:
     """Export every notebook to notebooks/<stem>.html. Returns repo path -> site path."""
     notebooks = all_notebooks(areas)
+    if notebooks and shutil.which("uv") is None:
+        raise SystemExit(
+            "marimo needs uv to bundle learnkit into the notebook exports. "
+            "Install the dev extras (pip install -e \".[dev]\") or run: pip install uv"
+        )
     stems: dict[str, str] = {}
     for nb in notebooks:
         if nb.stem in stems:

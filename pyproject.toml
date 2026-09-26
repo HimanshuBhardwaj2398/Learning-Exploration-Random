@@ -10,6 +10,7 @@ dev = [
     "pytest==9.1.1",
     "markdown-it-py==4.2.0",
     "mdit-py-plugins==0.6.1",
+    "uv==0.12.19",  # marimo uses uv to bundle learnkit into the WebAssembly notebook exports
 ]
 
 [build-system]

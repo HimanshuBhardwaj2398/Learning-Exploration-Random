@@ -27,5 +27,6 @@ Study visuals were made as claude.ai artifacts: hand-built HTML pages, 330–1,3
 
 - The first load of a notebook page downloads Python (Pyodide) and takes a few seconds; after that it's cached.
 - Notebooks must stick to the standard library, `marimo` and `learnkit` to run in the browser.
+- The site build needs `uv` (part of the dev extras): marimo uses it to package `learnkit` as a wheel for the exports.
 - Notebook-to-notebook links use full site URLs, because exported notebooks are served from `/notebooks/`.
 - Adding a topic is one command, and CI keeps the indexes and answer keys honest.

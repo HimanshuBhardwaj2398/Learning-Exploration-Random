@@ -85,7 +85,7 @@ Learning-Exploration-Random/
 ## 7. Commands
 
 ```bash
-pip install -e ".[dev]"                                      # once: marimo, pytest, learnkit
+pip install -e ".[dev]"                                      # once: marimo, pytest, uv, learnkit
 python tools/new_topic.py pattern DSA "Prefix sum"           # start a topic
 marimo edit DSA/05-prefix-sum/prefix_sum.py                  # write / study it
 pytest DSA/05-prefix-sum/prefix_sum.py                       # its tests
