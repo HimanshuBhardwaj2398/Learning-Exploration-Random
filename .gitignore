@@ -1,6 +1,9 @@
 # Site build output (tools/build_site.py); GitHub Actions rebuilds it on every deploy.
 _site/
 
+# Local uv environment (`uv sync --extra dev`)
+.venv/
+
 # Python and marimo caches
 __pycache__/
 *.egg-info/

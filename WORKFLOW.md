@@ -68,7 +68,7 @@ A topic is shipped when:
 Learning-Exploration-Random/
 ├── WORKFLOW.md            ← this file
 ├── README.md              ← map of areas (generated table)
-├── pyproject.toml         ← pip install -e ".[dev]"
+├── pyproject.toml         ← uv sync --extra dev (one .venv for DSA, python and the tools)
 ├── learnkit/              ← shared helpers: array/grid/bar/code views, practice runner, parsing
 ├── templates/             ← pattern · question · concept notebooks; topic · build · area READMEs
 ├── tools/
@@ -85,16 +85,27 @@ Learning-Exploration-Random/
 ## 7. Commands
 
 ```bash
-pip install -e ".[dev]"                                      # once: marimo, pytest, uv, learnkit
-python tools/new_topic.py pattern DSA "Prefix sum"           # start a topic
-marimo edit DSA/05-prefix-sum/prefix_sum.py                  # write / study it
-pytest DSA/05-prefix-sum/prefix_sum.py                       # its tests
-pytest                                                       # everything
-marimo check --strict DSA python                             # lint notebooks
-python tools/catalog.py                                      # refresh README tables
-python tools/build_site.py && python -m http.server -d _site 8000   # build + preview the whole site
-python tools/build_site.py --skip-notebooks                  # fast preview of pages only
+uv sync --extra dev                                          # once: .venv with marimo, pytest, uv, learnkit
+uv run python tools/new_topic.py pattern DSA "Prefix sum"    # start a topic
+uv run marimo edit DSA/05-prefix-sum/prefix_sum.py           # write / study it
+uv run pytest DSA/05-prefix-sum/prefix_sum.py                # its tests
+uv run pytest                                                # everything
+uv run marimo check --strict DSA python                      # lint notebooks
+uv run python tools/catalog.py                               # refresh README tables
+uv run python tools/build_site.py && uv run python -m http.server -d _site 8000   # build + preview the whole site
+uv run python tools/build_site.py --skip-notebooks           # fast preview of pages only
 ```
+
+`uv run` uses the repo's `.venv` even if another project's venv is active in your shell (it prints a harmless warning about the mismatch). CI still installs with pip from the same `pyproject.toml`.
+
+### Editing in VS Code
+
+1. Install the **marimo** extension (`marimo-team.vscode-marimo`). The workspace recommends it, so VS Code offers it when you open the folder.
+2. Open a notebook such as `DSA/02-two-pointers/two_pointers.py`, then click the marimo logo at the top right of the editor. It toggles between the plain `.py` source and the notebook view.
+3. Pick the kernel: Command Palette → **Python: Select Interpreter** → `.venv` (Python 3.11). `.vscode/settings.json` points there by default.
+4. Run cells with the notebook's run buttons.
+
+The notebooks are ordinary Python files, so edit them like code and run `uv run pytest <file>` in a terminal. `uv run marimo edit <file>` still opens the browser editor if you prefer that.
 
 ## 8. Git flow
 
