@@ -2,6 +2,8 @@
 
 Local copies of every interactive lab and plan from the **Coding practice** project. Open any `.html` file in a browser; it runs offline (fonts fall back if you're not online). Each row also links to the live version on claude.ai, which is the one that gets updated.
 
+**Browse online:** [himanshubhardwaj2398.github.io/Learning-Exploration-Random/DSA](https://himanshubhardwaj2398.github.io/Learning-Exploration-Random/DSA/). GitHub Pages rebuilds it on every push to `main` that touches `DSA/`.
+
 Study loop: **Spot it → See it → Template → Worked / Faded / Solo → Traps.** Each session: Read → See → Do → Recall, and the recall step is never cut.
 
 ## Map
@@ -54,6 +56,7 @@ Study loop: **Spot it → See it → Template → Worked / Faded / Solo → Trap
 - One folder per pattern, numbered in study order: `05-prefix-sum/`, `06-binary-search/`, `07-stack/` …
 - File names are kebab-case and say what the lab teaches.
 - Your own solutions can live beside the labs, e.g. `02-two-pointers/solutions/lc15_3sum.py`.
-- Links inside the labs still point at claude.ai; this README is the local map.
+- Links inside the labs still point at claude.ai; this README is the local map and the website's home page.
+- Preview the website before pushing: `pip install -r DSA/tools/requirements.txt`, `python DSA/tools/build_site.py`, then `python -m http.server -d _site 8000`.
 
 _Last synced: 26 Sep 2026._
