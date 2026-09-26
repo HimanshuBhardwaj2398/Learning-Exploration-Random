@@ -1,62 +1,30 @@
-# DSA — labs & notes
+# DSA
 
-Local copies of every interactive lab and plan from the **Coding practice** project. Open any `.html` file in a browser; it runs offline (fonts fall back if you're not online). Each row also links to the live version on claude.ai, which is the one that gets updated.
+> Coding-interview patterns and single-question deep dives in Python, each with a marimo notebook you can run in the browser.
 
-**Browse online:** [himanshubhardwaj2398.github.io/Learning-Exploration-Random/DSA](https://himanshubhardwaj2398.github.io/Learning-Exploration-Random/DSA/). GitHub Pages rebuilds it on every push to `main` that touches `DSA/`.
+Topics are numbered in study order. Each has a one-page README (spot-it cues, template, traps, ladder, review log) and a marimo notebook (visual step-throughs, brute force → optimal, practice with tests, recall). Some also have the original interactive labs and deep-dive **questions**. How a topic is run: [WORKFLOW.md](../WORKFLOW.md).
 
-Study loop: **Spot it → See it → Template → Worked / Faded / Solo → Traps.** Each session: Read → See → Do → Recall, and the recall step is never cut.
+**Browse online:** [himanshubhardwaj2398.github.io/Learning-Exploration-Random](https://himanshubhardwaj2398.github.io/Learning-Exploration-Random/). The notebooks run Python in your browser.
 
-## Map
+## Topics
 
-| # | Pattern | Status | Anchor ladder |
-| --- | --- | --- | --- |
-| 01 | Arrays & hashing | Two labs (14 Sep) | 36 Valid Sudoku, 128 Longest Consecutive |
-| 02 | Two pointers | Taught | 125 → 15 → 42 |
-| 03 | Sliding window | Taught; LC 424 solo still open | 643 → 3 → 424 |
-| 04 | Two pointers vs window | Comparison built | Twins: 167/209, 167/1, 209/862, 713/560, 283/1004, 881/1658, 392/567, 611/713 |
-| — | Next up | — | Prefix sum, then binary search and stack |
+<!-- topics:start -->
+| # | Topic | Kind | Status | Notebook | Also |
+| --- | --- | --- | --- | --- | --- |
+| 01 | [Arrays & hashing](01-arrays-hashing/README.md) | pattern | learning | [arrays_hashing.py](01-arrays-hashing/arrays_hashing.py) | [lab: Why It's O(n), Not O(n²)](01-arrays-hashing/longest-consecutive-why-O-n.html), [lab: Sudoku in three sets](01-arrays-hashing/valid-sudoku-three-sets.html) |
+| 02 | [Two pointers](02-two-pointers/README.md) | pattern | practising | [two_pointers.py](02-two-pointers/two_pointers.py) | [LC 42 Trapping Rain Water](02-two-pointers/questions/lc0042_trapping_rain_water.py), [lab: 3Sum Dissected](02-two-pointers/3sum-dissected.html), [lab: Two-Pointer Elimination](02-two-pointers/two-pointer-elimination.html), [lab: Two Pointers Workbench](02-two-pointers/two-pointers-workbench.html) |
+| 03 | [Sliding window](03-sliding-window/README.md) | pattern | practising | [sliding_window.py](03-sliding-window/sliding_window.py) | [lab: Sliding Window Workbench](03-sliding-window/sliding-window-workbench.html) |
+| 04 | [Pointers or window?](04-pointers-vs-window/README.md) | comparison | learning | [pointers_vs_window.py](04-pointers-vs-window/pointers_vs_window.py) | [lab: Pointers or Window?](04-pointers-vs-window/pointers-or-window.html) |
+<!-- topics:end -->
 
-## Files
+## Study loop
+**Spot it → See it → Template → Worked / Faded / Solo → Traps → Recall.** Each session: Read → See → Do → Recall. If a session runs long, cut the reading, never the recall.
 
-### 01-arrays-hashing
-| File | What it's for | Live |
-| --- | --- | --- |
-| [valid-sudoku-three-sets.html](01-arrays-hashing/valid-sudoku-three-sets.html) | Valid Sudoku as one question asked three times (row, column, box sets) | [open](https://claude.ai/artifact/C4hvXkrspgZJ3oJDkitezx) |
-| [longest-consecutive-why-O-n.html](01-arrays-hashing/longest-consecutive-why-O-n.html) | Why the set-based Longest Consecutive Sequence is O(n), not O(n²) | [open](https://claude.ai/artifact/KaPJKVpdDM4mZyetPGxHuf) |
+## Key ideas carried forward
+- Two pointers and sliding window are both staircases through the (start, end) pair grid; each step deletes a row or column.
+- Two pointers needs sorted order; a window needs monotone validity (e.g. no negatives). Can't sort and need positions → hash map. Negatives with a sum target → prefix sums (+ hash, or + deque for the shortest).
+- Same-direction pointers: if the gap is junk to overwrite, it's read/write; if the gap is the answer, it's a window.
+- A nested loop isn't automatically O(n²): bound the *total* work (amortisation), as in Longest Consecutive and every sliding window.
 
-### 02-two-pointers
-| File | What it's for | Live |
-| --- | --- | --- |
-| [two-pointers-workbench.html](02-two-pointers/two-pointers-workbench.html) | Five templates, six visualisers, bug gallery | [open](https://claude.ai/artifact/Hd56fc9MLui6AUt5Sxjumf) |
-| [two-pointer-elimination.html](02-two-pointers/two-pointer-elimination.html) | Why each converging step safely discards a whole row or column (Container With Most Water) | [open](https://claude.ai/artifact/ThNyrhS2DyPaxC3NJbVwaD) |
-| [3sum-dissected.html](02-two-pointers/3sum-dissected.html) | Fix one, two-pointer the rest, plus the dedup rules | [open](https://claude.ai/artifact/TYimuczmQqZ7nVAhz1UUZx) |
-
-### 03-sliding-window
-| File | What it's for | Live |
-| --- | --- | --- |
-| [sliding-window-workbench.html](03-sliding-window/sliding-window-workbench.html) | Fixed / longest / shortest shapes, need–have, the `if` vs `while` proof | [open](https://claude.ai/artifact/DDj3YdiHCGahAM149vgJE2) |
-
-### 04-pointers-vs-window
-| File | What it's for | Live |
-| --- | --- | --- |
-| [pointers-or-window.html](04-pointers-vs-window/pointers-or-window.html) | Both patterns on one pair grid, twin problems, the decision drill | [open](https://claude.ai/artifact/To4wXU3jpBo4FLz6vVB8RS) |
-| [reading-plan.md](04-pointers-vs-window/reading-plan.md) | 5-session reading plan with spaced review (snapshot of the doc) | [open](https://claude.ai/artifact/UmkponGDnZHBzXBra7ubEs) |
-
-### python-foundations
-| File | What it's for | Live |
-| --- | --- | --- |
-| [rebinding-say-whee-decorators.html](python-foundations/rebinding-say-whee-decorators.html) | How a decorator is just name rebinding (`say_whee = deco(say_whee)`) | [open](https://claude.ai/artifact/AprBpx1k2Uu3pjEpoB41MS) |
-
-## Key ideas to carry forward
-- Both patterns are staircases through the (start, end) pair grid; each step deletes a row or column.
-- Two pointers needs sorted order; a window needs monotone validity (e.g. no negatives). Can't sort and need positions → hash map. Negatives with a sum target → prefix sums (+ hash, or + deque for shortest).
-- Same-direction pointers: if the gap is junk to overwrite it's read/write; if the gap is the answer it's a window.
-
-## Conventions for new material
-- One folder per pattern, numbered in study order: `05-prefix-sum/`, `06-binary-search/`, `07-stack/` …
-- File names are kebab-case and say what the lab teaches.
-- Your own solutions can live beside the labs, e.g. `02-two-pointers/solutions/lc15_3sum.py`.
-- Links inside the labs still point at claude.ai; this README is the local map and the website's home page.
-- Preview the website before pushing: `pip install -r DSA/tools/requirements.txt`, `python DSA/tools/build_site.py`, then `python -m http.server -d _site 8000`.
-
-_Last synced: 26 Sep 2026._
+## Next up
+Prefix sum (`python tools/new_topic.py pattern DSA "Prefix sum"`), then binary search and stack.
