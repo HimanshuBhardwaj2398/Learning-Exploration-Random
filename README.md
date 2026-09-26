@@ -18,11 +18,13 @@
 ## Work on it locally
 
 ```bash
-pip install -e ".[dev]"                              # marimo, pytest, markdown tools, learnkit
-marimo edit DSA/02-two-pointers/two_pointers.py      # open a notebook
-pytest                                               # every notebook's answer keys and checks
-python tools/new_topic.py pattern DSA "Prefix sum"   # start the next topic
+uv sync --extra dev                                         # once: .venv with marimo, pytest, markdown tools, learnkit
+uv run marimo edit DSA/02-two-pointers/two_pointers.py      # open a notebook
+uv run pytest                                               # every notebook's answer keys and checks
+uv run python tools/new_topic.py pattern DSA "Prefix sum"   # start the next topic
 ```
+
+Prefer VS Code? See [Editing in VS Code](WORKFLOW.md#editing-in-vs-code).
 
 ## Also in this repo
 - `devops/`: Helsinki Docker MOOC exercises and a FastAPI-from-basics project (not part of the site)
