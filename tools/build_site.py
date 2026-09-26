@@ -27,6 +27,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 from pathlib import Path, PurePosixPath
 
 from markdown_it import MarkdownIt
@@ -266,7 +267,13 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("_site"), help="output folder (default: ./_site)")
     parser.add_argument("--skip-notebooks", action="store_true", help="don't export notebooks (fast preview)")
     args = parser.parse_args()
-    build(args.out.resolve(), skip_notebooks=args.skip_notebooks)
+    try:
+        build(args.out.resolve(), skip_notebooks=args.skip_notebooks)
+    except BaseException as exc:
+        if os.environ.get("GITHUB_ACTIONS") == "true":  # show the reason on the PR, not only in the raw log
+            detail = str(exc) if isinstance(exc, SystemExit) else traceback.format_exc()
+            print("::error title=Site build failed::" + detail.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A"))
+        raise
 
 
 MERMAID_SCRIPT = """<script type="module">
