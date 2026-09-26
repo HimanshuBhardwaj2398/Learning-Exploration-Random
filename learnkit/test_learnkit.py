@@ -11,7 +11,9 @@ from learnkit import (
     pair_grid_view,
     run_cases,
     line_of,
+    lookup_view,
     parse_ints,
+    recursion_guard,
     staircase_view,
     sudoku_view,
 )
@@ -85,6 +87,7 @@ def test_views_render():
         code_view("a = 1\nb = 2", active=2),
         kv_view({"sum": 3}),
         grid_legend(),
+        lookup_view([("obj", "instance", {"x": 1}), ("Cls", "class", {"x": 2, "f": "function"})], "x", searched=1),
     ):
         text = getattr(view, "text", view)
         assert "<" in text
@@ -109,3 +112,25 @@ def test_line_of_finds_nth_occurrence():
 def test_staircase_renders():
     view = staircase_view({"start": [0, 0, 1], "end": [0, 1, 2]}, top=3, current=1)
     assert "polyline" in getattr(view, "text", view)
+
+
+def test_runaway_recursion_is_reported_not_fatal():
+    code = "def down(n):\n    return down(n + 1)\n"
+    result = run_cases(code, "down", [Case((0,), 0)])[0]
+    assert result.error.startswith("RecursionError")
+
+
+def test_recursion_guard_restores_the_limit():
+    import sys
+    before = sys.getrecursionlimit()
+    with recursion_guard(headroom=50):
+        assert sys.getrecursionlimit() <= before
+    assert sys.getrecursionlimit() == before
+
+
+def test_lookup_view_marks_found_and_shadowed():
+    chain = [("acct", "instance", {"rate": 0.1}), ("Savings", "class", {"rate": 0.04})]
+    text = getattr(lookup_view(chain, "rate", searched=1), "text", "")
+    assert "found here" in text and "shadowed" in text
+    missing = getattr(lookup_view(chain, "nope", searched=2), "text", "")
+    assert missing.count("not here") == 2

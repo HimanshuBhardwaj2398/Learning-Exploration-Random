@@ -203,6 +203,66 @@ def code_view(source: str, active: int | Iterable[int] | None = None, *, title: 
     )
 
 
+def lookup_view(
+    chain: Sequence[tuple[str, str, Mapping[str, Any]]],
+    name: str,
+    *,
+    searched: int,
+    caption: str | None = None,
+) -> Any:
+    """A name being searched through a chain of namespaces, left to right.
+
+    chain:    (title, subtitle, {name: shown value}) in search order, e.g. the
+              instance, its class, the base classes (attribute lookup), or local,
+              enclosing, global, builtins (LEGB scopes).
+    searched: how many boxes have been searched so far (0 .. len(chain)). The last
+              searched box is the current one: it lights up green if it holds the
+              name, red if not. Once the name is found, the same name further along
+              the chain is marked as shadowed.
+    """
+    found_at = next((k for k, (_t, _s, entries) in enumerate(chain) if name in entries), None)
+    boxes = []
+    for k, (title, subtitle, entries) in enumerate(chain):
+        current = k == searched - 1
+        done = k < searched - 1
+        hit = current and name in entries
+        if hit:
+            frame, status = "border:2px solid #059669;", '<span style="color:#059669;font-weight:700">✓ found here</span>'
+        elif current:
+            frame, status = "border:2px dashed #dc2626;", '<span style="color:#dc2626;font-weight:700">✗ not here</span>'
+        elif done:
+            frame, status = f"border:1.5px solid {_BORDER};opacity:.5;", '<span style="opacity:.8">✗ not here</span>'
+        else:
+            frame, status = f"border:1.5px solid {_BORDER};opacity:.8;", '<span style="opacity:.6">not searched</span>'
+        rows = []
+        for key, value in entries.items():
+            style = f"padding:1px 8px 1px 0;font:12.5px {_MONO};"
+            tail = ""
+            if key == name and hit:
+                style += "background:rgba(16,185,129,.25);font-weight:700;"
+            elif key == name and found_at is not None and k > found_at and searched - 1 >= found_at:
+                style += "text-decoration:line-through;opacity:.55;"
+                tail = '<td style="font-size:11px;opacity:.7;padding-left:4px">shadowed</td>'
+            rows.append(
+                f'<tr><td style="{style}">{_esc(key)}</td>'
+                f'<td style="{style}opacity:.8">{_esc(value)}</td>{tail}</tr>'
+            )
+        body = "".join(rows) or f'<tr><td style="font:12px {_MONO};opacity:.5">(nothing relevant)</td></tr>'
+        boxes.append(
+            f'<div style="{frame}border-radius:10px;padding:8px 12px;min-width:150px;max-width:260px">'
+            f'<div style="font:700 13px {_MONO}">{_esc(title)}</div>'
+            f'<div style="font-size:11.5px;opacity:.65;margin-bottom:5px">{_esc(subtitle)}</div>'
+            f'<table style="border-collapse:collapse">{body}</table>'
+            f'<div style="font-size:12px;margin-top:6px">{status}</div></div>'
+        )
+    arrow = '<div style="align-self:center;font-size:18px;opacity:.55">→</div>'
+    cap = f'<div style="font-size:13.5px;margin-top:8px">{_esc(caption)}</div>' if caption else ""
+    return _out(
+        f'<div><div style="font:600 13px {_MONO};margin-bottom:6px">looking up .{_esc(name)}</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:stretch">{arrow.join(boxes)}</div>{cap}</div>'
+    )
+
+
 _GRID_STATES = {
     "unseen": "",
     "computed": "background:rgba(99,102,241,.28);",
