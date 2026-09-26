@@ -1,0 +1,600 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Why It's O(n), Not O(n²)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#ffffff;
+    --ground:#f3f5fa;
+    --ink:#171b24;
+    --ink-soft:#4a5162;
+    --ink-faint:#7b8397;
+    --line:#e2e6ef;
+    --line-strong:#c9d0de;
+    --accent:#4c6ef5;
+    --accent-soft:#e7ecfe;
+    --start:#df8209;
+    --start-soft:#fbecd2;
+    --good:#1f8a54;
+    --good-soft:#dcf1e6;
+    --naive:#c24a24;
+    --naive-soft:#f8e4dc;
+    --shadow:0 1px 2px rgba(16,22,40,.06),0 8px 24px rgba(16,22,40,.06);
+    --shadow-sm:0 1px 2px rgba(16,22,40,.05);
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --paper:#1b1f2a;
+      --ground:#111420;
+      --ink:#eef1f7;
+      --ink-soft:#aeb6c6;
+      --ink-faint:#7a8397;
+      --line:#2a3040;
+      --line-strong:#3b4254;
+      --accent:#7d97ff;
+      --accent-soft:#232c46;
+      --start:#f0a24b;
+      --start-soft:#3a2c18;
+      --good:#4cc38a;
+      --good-soft:#183328;
+      --naive:#ef7d54;
+      --naive-soft:#3a2018;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+      --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#1b1f2a;
+    --ground:#111420;
+    --ink:#eef1f7;
+    --ink-soft:#aeb6c6;
+    --ink-faint:#7a8397;
+    --line:#2a3040;
+    --line-strong:#3b4254;
+    --accent:#7d97ff;
+    --accent-soft:#232c46;
+    --start:#f0a24b;
+    --start-soft:#3a2c18;
+    --good:#4cc38a;
+    --good-soft:#183328;
+    --naive:#ef7d54;
+    --naive-soft:#3a2018;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding-block:40px 64px;padding-inline:20px}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+  /* ---- header ---- */
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px
+  }
+  h1{
+    font-size:clamp(28px,5.2vw,44px);line-height:1.04;font-weight:700;margin:0;
+    letter-spacing:-.02em;text-wrap:balance;max-width:16ch
+  }
+  h1 .q{color:var(--ink-faint)}
+  .lede{font-size:clamp(16px,2.2vw,18.5px);color:var(--ink-soft);margin:18px 0 0;max-width:62ch}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .verdict{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+  .chip{
+    display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:12px;
+    background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow-sm);min-width:132px
+  }
+  .chip .k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+  .chip .v{font-family:"IBM Plex Mono",monospace;font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .chip.time .v{color:var(--accent)}
+  .chip.space .v{color:var(--ink)}
+  .chip.ops .v{color:var(--good)}
+
+  section{margin-top:44px}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+  .section-head .num{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);font-weight:600;
+    border:1px solid var(--line-strong);border-radius:6px;padding:1px 7px;line-height:1.5
+  }
+  h2{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .section-sub{color:var(--ink-soft);margin:6px 0 0;max-width:64ch;font-size:15px}
+
+  /* ---- lab panel ---- */
+  .lab{
+    margin-top:22px;background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);overflow:hidden
+  }
+  .controls{
+    display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;
+    padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(var(--paper),var(--paper))
+  }
+  .presets{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .presets .lbl{font-size:12px;color:var(--ink-faint);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-right:2px}
+  .preset{
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+    background:var(--ground);color:var(--ink-soft);border:1px solid var(--line);transition:.15s
+  }
+  .preset:hover{border-color:var(--line-strong);color:var(--ink)}
+  .preset[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .spacer{flex:1 1 20px}
+
+  .transport{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button.btn{
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;
+    padding:8px 15px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);transition:.15s;
+    display:inline-flex;align-items:center;gap:7px
+  }
+  button.btn:hover{border-color:var(--accent);color:var(--accent)}
+  button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.btn.primary:hover{filter:brightness(1.06);color:#fff}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;filter:none;border-color:var(--line-strong);color:var(--ink)}
+  .speed{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-faint)}
+  .speed input{accent-color:var(--accent);width:92px}
+
+  .stage{display:grid;grid-template-columns:1.55fr 1fr;gap:0}
+  .tape-col{padding:20px 18px;border-right:1px solid var(--line);min-width:0}
+  .side-col{padding:20px 18px;min-width:0;background:var(--ground)}
+  @media(max-width:720px){
+    .stage{grid-template-columns:1fr}
+    .tape-col{border-right:none;border-bottom:1px solid var(--line)}
+  }
+
+  .mini-head{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .input-row{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;word-break:break-word}
+  .input-row .setcall{color:var(--ink-faint)}
+
+  .tape{display:flex;flex-wrap:wrap;gap:9px}
+  .cell{
+    position:relative;min-width:46px;height:52px;padding:0 8px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:600;
+    background:var(--paper);border:1.5px solid var(--line);color:var(--ink);
+    transition:background .25s,border-color .2s,transform .2s,box-shadow .2s
+  }
+  .cell .tally{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:10px;color:var(--ink-faint);font-weight:500;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+  .cell.touched{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .cell.start{background:var(--start-soft);border-color:var(--start);color:var(--start)}
+  .cell.start::before{
+    content:"START";position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    font-size:8.5px;letter-spacing:.08em;font-weight:700;color:#fff;background:var(--start);
+    padding:1px 5px;border-radius:4px;line-height:1.4
+  }
+  .cell.focus{box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--accent);transform:translateY(-3px)}
+  .cell.pop{animation:pop .32s ease}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .tape-note{margin-top:26px;min-height:40px;font-size:14px;color:var(--ink-soft);
+    background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:10px 13px;line-height:1.5}
+  .tape-note b{color:var(--ink)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--ink-faint)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:13px;height:13px;border-radius:4px;border:1.5px solid}
+  .sw.start{background:var(--start-soft);border-color:var(--start)}
+  .sw.touched{background:var(--accent-soft);border-color:var(--accent)}
+  .sw.idle{background:var(--paper);border-color:var(--line-strong)}
+
+  /* counters */
+  .counters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .counter{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
+  .counter .cl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600}
+  .counter .cv{font-family:"IBM Plex Mono",monospace;font-size:24px;font-weight:600;line-height:1.2;margin-top:2px}
+  .counter.total{grid-column:1 / -1;background:var(--good-soft);border-color:var(--good)}
+  .counter.total .cv{color:var(--good)}
+  .counter.total .cl{color:var(--good)}
+  .formula{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+  .meter-wrap{margin-top:18px}
+  .meter-top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-faint);font-weight:600;margin-bottom:6px}
+  .meter{position:relative;height:34px;border-radius:9px;background:var(--naive-soft);border:1px solid var(--naive);overflow:hidden}
+  .meter .ghostlbl{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--naive);font-weight:600;opacity:.85}
+  .meter .fill{position:absolute;left:0;top:0;bottom:0;background:var(--good);width:0;transition:width .3s ease;border-right:2px solid var(--good)}
+  .meter .boundtick{position:absolute;top:0;bottom:0;border-left:2px dashed var(--accent)}
+  .meter .boundlbl{position:absolute;top:-1px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--accent);font-weight:600;transform:translateX(4px);background:var(--paper);padding:0 3px;border-radius:3px}
+  .meter-cap{font-size:12px;color:var(--ink-soft);margin-top:8px;line-height:1.45}
+  .meter-cap b.g{color:var(--good)}
+  .meter-cap b.n{color:var(--naive)}
+
+  /* code */
+  .codebox{margin-top:22px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .codebar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-faint);font-family:"IBM Plex Mono",monospace}
+  .dot{width:10px;height:10px;border-radius:50%}
+  pre.code{margin:0;padding:14px 4px 16px;overflow-x:auto}
+  .cline{display:grid;grid-template-columns:34px 1fr;font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.75;transition:background .2s}
+  .cline .ln{color:var(--ink-faint);text-align:right;padding-right:14px;user-select:none;opacity:.7}
+  .cline .ct{white-space:pre;color:var(--ink)}
+  .cline.active{background:var(--accent-soft)}
+  .cline.active .ln{color:var(--accent);opacity:1;font-weight:600}
+  .tok-kw{color:var(--naive);font-weight:600}
+  .tok-fn{color:var(--accent);font-weight:600}
+  .tok-num{color:var(--good)}
+  .tok-cm{color:var(--ink-faint);font-style:italic}
+
+  /* argument */
+  .arg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+  @media(max-width:640px){.arg{grid-template-columns:1fr}}
+  .argcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px;box-shadow:var(--shadow-sm)}
+  .argcard h3{margin:0 0 8px;font-size:16px;font-weight:600;display:flex;align-items:center;gap:9px}
+  .argcard h3 .badge{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+  .argcard.charge h3 .badge{background:var(--good-soft);color:var(--good)}
+  .argcard p{margin:0;color:var(--ink-soft);font-size:14.5px}
+  .argcard p + p{margin-top:9px}
+  .argcard code{font-family:"IBM Plex Mono",monospace;font-size:.92em;background:var(--ground);padding:1px 5px;border-radius:5px;color:var(--ink)}
+  .keyline{margin-top:16px;padding:15px 18px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent);
+    font-size:15px;color:var(--ink)}
+  .keyline b{color:var(--accent)}
+
+  /* chart */
+  .chart-wrap{margin-top:22px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px 12px;box-shadow:var(--shadow-sm)}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+  .chart-legend span{display:inline-flex;align-items:center;gap:7px;color:var(--ink-soft)}
+  .chart-legend i{width:22px;height:3px;border-radius:2px;display:inline-block}
+  svg{display:block;width:100%;height:auto}
+  .cap{color:var(--ink-faint);font-size:13px;margin-top:10px}
+
+  .foot{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);color:var(--ink-soft);font-size:14px}
+  .foot b{color:var(--ink)}
+  .foot code{font-family:"IBM Plex Mono",monospace;font-size:.92em;background:var(--paper);border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Complexity analysis · longest consecutive sequence</p>
+    <h1>Why it's O(n), <span class="q">not O(n²)</span></h1>
+    <p class="lede">There's a <b>loop inside a loop</b> here — the classic shape of a quadratic algorithm. Yet this one is linear. The reason is <b>amortization</b>: no matter the input, each number is touched a constant number of times. Step through it and watch the operation counter — it never crosses the <b>2n</b> line.</p>
+    <div class="verdict">
+      <div class="chip time"><span class="k">Time</span><span class="v">O(n)</span></div>
+      <div class="chip space"><span class="k">Space</span><span class="v">O(n)</span></div>
+      <div class="chip ops"><span class="k">Total work</span><span class="v">≈ 2n</span></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>Watch each number get touched</h2></div>
+    <p class="section-sub">The outer loop visits every number once. A number only launches a forward walk when it <em>starts</em> a run (its predecessor is absent). Each cell shows a running tally: <span class="mono">outer&nbsp;visits</span> · <span class="mono">walk&nbsp;touches</span>. Neither ever exceeds 1.</p>
+
+    <div class="lab">
+      <div class="controls">
+        <div class="presets" id="presets">
+          <span class="lbl">Input</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="transport">
+          <div class="speed"><span>slow</span><input id="speed" type="range" min="120" max="900" value="560" step="20" aria-label="Animation speed"><span>fast</span></div>
+          <button class="btn" id="stepBack" aria-label="Step back">‹ back</button>
+          <button class="btn primary" id="play">▶ Play</button>
+          <button class="btn" id="stepFwd">step ›</button>
+          <button class="btn" id="reset" aria-label="Reset">↺</button>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="tape-col">
+          <p class="mini-head">The working set <span class="mono" id="progress"></span></p>
+          <p class="input-row"><span class="setcall">nums = set(</span><span id="inputEcho"></span><span class="setcall">)</span></p>
+          <div class="tape" id="tape"></div>
+          <div class="tape-note" id="note">Press <b>Play</b> to run the scan, or <b>step</b> through one operation at a time.</div>
+          <div class="legend">
+            <span><i class="sw idle"></i> not yet touched</span>
+            <span><i class="sw start"></i> starts a run</span>
+            <span><i class="sw touched"></i> reached by a walk</span>
+          </div>
+        </div>
+
+        <div class="side-col">
+          <p class="mini-head">Operation counter</p>
+          <div class="counters">
+            <div class="counter"><div class="cl">Outer visits</div><div class="cv mono" id="cOuter">0</div></div>
+            <div class="counter"><div class="cl">Walk steps</div><div class="cv mono" id="cInner">0</div></div>
+            <div class="counter total"><div class="cl">Membership checks (total)</div><div class="cv mono" id="cChecks">0</div><div class="formula" id="cFormula">&nbsp;</div></div>
+          </div>
+
+          <div class="meter-wrap">
+            <div class="meter-top"><span>work done</span><span id="meterN"></span></div>
+            <div class="meter" id="meter">
+              <div class="fill" id="meterFill"></div>
+              <div class="boundtick" id="meterTick"><span class="boundlbl" id="meterTickLbl">2n</span></div>
+              <div class="ghostlbl" id="meterGhost"></div>
+            </div>
+            <p class="meter-cap">Bar spans <b class="n">n² checks</b> — what you'd pay by walking from <em>every</em> element. The real run fills only to <b class="g">2n</b>. The gap between them <em>is</em> the difference between O(n²) and O(n).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="codebox">
+        <div class="codebar"><span class="dot" style="background:var(--naive)"></span><span class="dot" style="background:var(--start)"></span><span class="dot" style="background:var(--good)"></span><span style="margin-left:6px">solution.py — executing line highlights as you step</span></div>
+        <pre class="code" id="code"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>The amortized argument</h2></div>
+    <p class="section-sub">A worst-case-per-line reading over-counts. The honest way to bound a nested loop is to ask how much total work happens across the <em>whole</em> run, then divide by n.</p>
+
+    <div class="arg">
+      <div class="argcard">
+        <h3><span class="badge">1</span>The guard is everything</h3>
+        <p>The inner <code>while</code> only runs when <code>n-1</code> is absent from the set — i.e. when <code>n</code> is the <em>first</em> number of a consecutive run. Every run has exactly one such starting number.</p>
+        <p>So the expensive walk fires <b>once per run</b>, never once per element.</p>
+      </div>
+      <div class="argcard">
+        <h3><span class="badge">2</span>Walks don't overlap</h3>
+        <p>The walk from a run's start steps through that run's numbers and <em>only</em> those. Different runs are disjoint sets of integers, so no number is ever walked over twice.</p>
+        <p>Sum the lengths of all the walks and you get <code>n</code> — the total count of numbers, once each.</p>
+      </div>
+      <div class="argcard charge">
+        <h3><span class="badge">3</span>Charge the cost to elements</h3>
+        <p>Give every number a budget of 2 checks: one for its own <code>n-1 not in set</code> test in the outer loop, one for being the target of a single walk step.</p>
+        <p>Total checks ≤ <code>2n</code>. That's the meter you watched fill.</p>
+      </div>
+      <div class="argcard charge">
+        <h3><span class="badge">4</span>Add the setup</h3>
+        <p>Building <code>set(nums)</code> is one O(n) pass. Set lookups are O(1) on average, so each check is constant.</p>
+        <p><code>O(n) + O(2n) = O(n)</code> time. The set itself is <code>O(n)</code> space.</p>
+      </div>
+    </div>
+
+    <div class="keyline">The trap: <b>reading a nested loop as O(n²) by reflex.</b> The upper bound "n outer iterations × up to n inner iterations" is real but loose. When a guard makes the inner work fire only on run-starts, and those runs partition the input, the true bound collapses to linear.</div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>Linear vs. the naive walk-from-everything</h2></div>
+    <p class="section-sub">Without the <code>n-1</code> guard, you'd start a walk from every element and re-traverse whole runs repeatedly — the genuine O(n²). Here's how the two diverge as the input grows.</p>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <span><i style="background:var(--good)"></i> guarded scan — 2n</span>
+        <span><i style="background:var(--naive)"></i> naive walk-from-all — n²</span>
+      </div>
+      <svg id="chart" viewBox="0 0 760 300" role="img" aria-label="Operations versus input size: 2n grows linearly while n squared grows quadratically."></svg>
+      <p class="cap">At n = 60 the guarded scan does ~120 checks; the naive version does ~3,600 — a 30× gap that widens without bound.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p><b>The one caveat worth stating in an interview.</b> The O(n) rests on hash-set membership being O(1) <em>average</em>. Python's <code>set</code> can degrade to O(n) per lookup under adversarial hash collisions, which would make the whole thing O(n²) in a pathological worst case. For the integer keys in this problem that never happens in practice, so the accepted answer is <b>O(n) time, O(n) space</b> — just name the assumption you're leaning on.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- the algorithm as source lines (1-indexed display) ----
+  const CODE = [
+    [["def ","tok-kw"],["longestConsecutive","tok-fn"],["(self, nums):"]],
+    [["    nums = "],["set","tok-fn"],["(nums)"]],
+    [["    longest = "],["0","tok-num"]],
+    [["    for","tok-kw"],[" n "],["in","tok-kw"],[" nums:"]],
+    [["        if","tok-kw"],[" n - "],["1","tok-num"],[" not in","tok-kw"],[" nums:"]],
+    [["            current = "],["1","tok-num"]],
+    [["            next_number = n + "],["1","tok-num"]],
+    [["            while","tok-kw"],[" next_number "],["in","tok-kw"],[" nums:"]],
+    [["                current += "],["1","tok-num"]],
+    [["                next_number += "],["1","tok-num"]],
+    [["            longest = "],["max","tok-fn"],["(current, longest)"]],
+    [["    return","tok-kw"],[" longest"]]
+  ];
+  // map logical line ids used by the stepper -> display line index (0-based)
+  const L = { set:1, forif:4, current:5, next:6, whileHit:7, extend1:8, extend2:9, runEnd:10, done:11 };
+
+  const PRESETS = [
+    {name:"classic", label:"[100,4,200,1,3,2]", values:[100,4,200,1,3,2]},
+    {name:"onerun", label:"one long run", values:[5,2,4,1,3,7,6,8]},
+    {name:"shorts", label:"many short runs", values:[10,11,20,21,30,31,40,41]},
+    {name:"scatter", label:"no runs", values:[8,3,17,1,25,12,40]}
+  ];
+
+  let values = PRESETS[0].values.slice();
+  let steps = [], idx = 0, timer = null, playing = false;
+  let speed = 560;
+
+  const $ = id => document.getElementById(id);
+
+  // ---- build the step list by simulating the algorithm ----
+  function buildSteps(vals){
+    const cells = vals.slice();               // display order == iteration order
+    const set = new Set(cells);
+    const idxByVal = new Map(cells.map((v,i)=>[v,i]));
+    const st = [];
+    let outer=0, inner=0, checks=0;
+    const tO={}, tW={}, state={};
+    cells.forEach((_,i)=>{tO[i]=0;tW[i]=0;state[i]="idle";});
+    const snap = (focus,line,note,pop)=>st.push({
+      focus, line, note, outer, inner, checks,
+      tO:{...tO}, tW:{...tW}, state:{...state}, pop: (pop===undefined?focus:pop)
+    });
+
+    snap(null, L.set, `Build a set from the input for O(1) membership lookups.`, null);
+    for(let i=0;i<cells.length;i++){
+      const v = cells[i];
+      outer++; tO[i]=1; state[i]="focus";
+      checks++;
+      const isStart = !set.has(v-1);
+      snap(i, L.forif, isStart
+        ? `Visit <b>${v}</b>. Is <b>${v-1}</b> in the set? <b>No</b> → ${v} starts a run.`
+        : `Visit <b>${v}</b>. Is <b>${v-1}</b> in the set? <b>Yes</b> → ${v} is mid-run, skip. No walk.`, i);
+      if(isStart){
+        state[i]="start"; tW[i]=1;
+        let current=1, nxt=v+1;
+        snap(i, L.current, `Start the run at <b>${v}</b>: current = 1.`, i);
+        while(true){
+          checks++;
+          if(set.has(nxt)){
+            inner++; current++;
+            const j = idxByVal.get(nxt);
+            state[j]="touched"; tW[j]=1;
+            snap(j, L.extend1, `Is <b>${nxt}</b> in the set? <b>Yes</b> → extend. Run length = ${current}.`, j);
+            nxt++;
+          } else {
+            snap(i, L.runEnd, `Is <b>${nxt}</b> in the set? <b>No</b> → run ends. Length ${current}.`, null);
+            break;
+          }
+        }
+      } else {
+        state[i]="seen-skip";
+      }
+      if(state[i]==="focus") state[i]="idle";
+      if(state[i]==="seen-skip") state[i]="idle";
+    }
+    snap(null, L.done, `Done. Outer loop touched every cell once; walks covered every cell exactly once. Total = <b>2n</b>.`, null);
+    return st;
+  }
+
+  // ---- rendering ----
+  function renderCode(){
+    const el = $("code");
+    el.innerHTML = "";
+    CODE.forEach((line, i)=>{
+      const row = document.createElement("div");
+      row.className = "cline"; row.dataset.line = i;
+      const ln = document.createElement("span"); ln.className="ln"; ln.textContent = i+1;
+      const ct = document.createElement("span"); ct.className="ct";
+      line.forEach(seg=>{
+        const s=document.createElement("span");
+        s.textContent = seg[0];
+        if(seg[1]) s.className = seg[1];
+        ct.appendChild(s);
+      });
+      row.appendChild(ln); row.appendChild(ct);
+      el.appendChild(row);
+    });
+  }
+
+  function buildTape(){
+    const tape = $("tape"); tape.innerHTML="";
+    values.forEach((v,i)=>{
+      const c=document.createElement("div");
+      c.className="cell"; c.dataset.i=i;
+      c.innerHTML = `<span class="val">${v}</span><span class="tally" id="tal${i}"></span>`;
+      tape.appendChild(c);
+    });
+    $("inputEcho").textContent = "["+values.join(", ")+"]";
+    $("progress").textContent = "n = "+values.length;
+    $("meterN").textContent = "n² = "+(values.length*values.length)+" checks";
+  }
+
+  function applyStep(){
+    const s = steps[idx];
+    // cells
+    values.forEach((v,i)=>{
+      const cell = document.querySelector('.cell[data-i="'+i+'"]');
+      if(!cell) return;
+      cell.classList.remove("touched","start","focus","pop");
+      const stt = s.state[i];
+      if(stt==="touched") cell.classList.add("touched");
+      else if(stt==="start") cell.classList.add("start");
+      if(s.focus===i) cell.classList.add("focus");
+      if(s.pop===i && !prefersReduced) cell.classList.add("pop");
+      const to=s.tO[i], tw=s.tW[i];
+      const tal=$("tal"+i);
+      if(tal) tal.textContent = (to||tw) ? `${to}·${tw}` : "";
+    });
+    // counters
+    $("cOuter").textContent = s.outer;
+    $("cInner").textContent = s.inner;
+    $("cChecks").textContent = s.checks;
+    $("cFormula").innerHTML = s.checks>0 ? `= ${s.outer} outer + ${s.checks - s.outer} walk` : "&nbsp;";
+    // note
+    $("note").innerHTML = s.note;
+    // code
+    document.querySelectorAll(".cline").forEach(r=>r.classList.toggle("active", +r.dataset.line===s.line));
+    // meter
+    const n=values.length, naive=n*n||1, bound=2*n;
+    $("meterFill").style.width = Math.min(100, (s.checks/naive)*100)+"%";
+    $("meterTick").style.left = Math.min(100,(bound/naive)*100)+"%";
+    $("meterGhost").textContent = "n² = "+naive;
+    // buttons
+    $("stepFwd").disabled = idx>=steps.length-1;
+    $("stepBack").disabled = idx<=0;
+  }
+
+  function goTo(i){ idx=Math.max(0,Math.min(steps.length-1,i)); applyStep(); }
+  function next(){ if(idx<steps.length-1){ idx++; applyStep(); } else stop(); }
+  function prev(){ if(idx>0){ idx--; applyStep(); } }
+
+  function play(){
+    if(idx>=steps.length-1){ goTo(0); }
+    playing=true; $("play").innerHTML="❚❚ Pause";
+    clearInterval(timer);
+    timer=setInterval(()=>{ if(idx>=steps.length-1){ stop(); } else next(); }, speed);
+  }
+  function stop(){ playing=false; clearInterval(timer); $("play").innerHTML="▶ Play"; }
+  function togglePlay(){ playing?stop():play(); }
+
+  function loadValues(vals, presetName){
+    stop(); values=vals.slice(); steps=buildSteps(values); idx=0;
+    buildTape(); applyStep();
+    document.querySelectorAll(".preset").forEach(b=>b.setAttribute("aria-pressed", b.dataset.name===presetName ? "true":"false"));
+  }
+
+  // presets UI
+  const presetWrap=$("presets");
+  PRESETS.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset"; b.dataset.name=p.name; b.textContent=p.label;
+    b.setAttribute("aria-pressed", p.name==="classic"?"true":"false");
+    b.addEventListener("click",()=>loadValues(p.values,p.name));
+    presetWrap.appendChild(b);
+  });
+
+  const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // controls
+  $("play").addEventListener("click",togglePlay);
+  $("stepFwd").addEventListener("click",()=>{stop();next();});
+  $("stepBack").addEventListener("click",()=>{stop();prev();});
+  $("reset").addEventListener("click",()=>{stop();goTo(0);});
+  $("speed").addEventListener("input",e=>{speed=+e.target.value; if(playing){play();}});
+
+  // ---- asymptotic chart ----
+  function drawChart(){
+    const svg=$("chart");
+    const W=760,H=300, pad={l:52,r:20,t:16,b:38};
+    const nMax=60, yMax=nMax*nMax;
+    const x = n => pad.l + (n/nMax)*(W-pad.l-pad.r);
+    const y = v => H-pad.b - (v/yMax)*(H-pad.t-pad.b);
+    let out="";
+    // grid + y labels
+    const yticks=[0,900,1800,2700,3600];
+    yticks.forEach(v=>{
+      out+=`<line x1="${pad.l}" y1="${y(v)}" x2="${W-pad.r}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+      out+=`<text x="${pad.l-8}" y="${y(v)+4}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--ink-faint)">${v}</text>`;
+    });
+    // x labels
+    [0,15,30,45,60].forEach(n=>{
+      out+=`<text x="${x(n)}" y="${H-pad.b+20}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--ink-faint)">${n}</text>`;
+    });
+    out+=`<text x="${(pad.l+W-pad.r)/2}" y="${H-6}" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="var(--ink-soft)">input size n</text>`;
+    // naive curve n^2
+    let pN="", pG="";
+    for(let n=0;n<=nMax;n++){ pN+=`${x(n)},${y(n*n)} `; pG+=`${x(n)},${y(2*n)} `; }
+    out+=`<polyline points="${pN.trim()}" fill="none" stroke="var(--naive)" stroke-width="2.5"/>`;
+    out+=`<polyline points="${pG.trim()}" fill="none" stroke="var(--good)" stroke-width="2.5"/>`;
+    // endpoint dots + labels
+    out+=`<circle cx="${x(nMax)}" cy="${y(nMax*nMax)}" r="4" fill="var(--naive)"/>`;
+    out+=`<text x="${x(nMax)-8}" y="${y(nMax*nMax)+16}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="11.5" font-weight="600" fill="var(--naive)">n² = 3600</text>`;
+    out+=`<circle cx="${x(nMax)}" cy="${y(2*nMax)}" r="4" fill="var(--good)"/>`;
+    out+=`<text x="${x(nMax)-8}" y="${y(2*nMax)-9}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="11.5" font-weight="600" fill="var(--good)">2n = 120</text>`;
+    svg.innerHTML=out;
+  }
+
+  // init
+  renderCode();
+  steps=buildSteps(values);
+  buildTape();
+  applyStep();
+  drawChart();
+})();
+</script>
+
+</body></html>

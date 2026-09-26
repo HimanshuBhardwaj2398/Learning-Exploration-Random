@@ -1,0 +1,333 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rebinding say_whee</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#f3f2ee; --panel:#ffffff; --panel-2:#eceae3; --panel-3:#f7f6f2;
+    --ink:#23262e; --muted:#6c7280; --faint:#9aa0aa; --line:#dcdad2;
+    --accent:#4f57cf; --accent-soft:#e5e6fb;
+    --amber:#bd6f1c; --amber-soft:#f5e6cd;
+    --teal:#127f79; --teal-soft:#d3ebe8;
+    --grey:#7c828f; --grey-soft:#e6e6ea;
+    --code-bg:#faf9f6;
+    --shadow:0 1px 2px rgba(30,30,40,.06), 0 8px 24px rgba(30,30,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161b; --panel:#1c1f27; --panel-2:#22262f; --panel-3:#1a1d24;
+      --ink:#e8e9ec; --muted:#9aa1af; --faint:#6b7280; --line:#333844;
+      --accent:#8f97ff; --accent-soft:#262a45;
+      --amber:#e0993f; --amber-soft:#39301f;
+      --teal:#49c6bd; --teal-soft:#123531;
+      --grey:#9aa0b0; --grey-soft:#2a2e38;
+      --code-bg:#181b22;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161b; --panel:#1c1f27; --panel-2:#22262f; --panel-3:#1a1d24;
+    --ink:#e8e9ec; --muted:#9aa1af; --faint:#6b7280; --line:#333844;
+    --accent:#8f97ff; --accent-soft:#262a45;
+    --amber:#e0993f; --amber-soft:#39301f;
+    --teal:#49c6bd; --teal-soft:#123531;
+    --grey:#9aa0b0; --grey-soft:#2a2e38;
+    --code-bg:#181b22;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1060px;margin:0 auto;padding-block:26px 40px;padding-left:16px;padding-right:16px}
+
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+  h1{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(26px,5vw,38px);letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+  .lede{font-family:'Newsreader',Georgia,serif;font-size:clamp(15px,2.4vw,18px);color:var(--muted);margin:0;max-width:60ch;line-height:1.5}
+  .lede code{font-family:'JetBrains Mono',monospace;font-size:.86em;color:var(--ink);background:var(--panel-2);padding:1px 5px;border-radius:5px}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:26px}
+  @media (min-width:840px){ .grid{grid-template-columns:0.92fr 1.08fr;align-items:start} }
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+  .card-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .card-hd .name{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500}
+  .card-hd .dot3{display:flex;gap:6px}
+  .card-hd .dot3 i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+
+  /* code panel */
+  .code{font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.65;padding:12px 6px 14px;background:var(--code-bg);border-radius:0 0 16px 16px;overflow-x:auto}
+  .code .ln{white-space:pre;padding:1px 12px;border-left:3px solid transparent;transition:background .25s ease,border-color .25s ease}
+  .code .ln.on{background:var(--accent-soft);border-left-color:var(--accent)}
+  .code .sep{height:10px}
+  .code .kw{color:var(--accent);font-weight:500}
+  .code .str{color:var(--amber)}
+  .code .cm{color:var(--faint);font-style:italic}
+  .code .fn{color:var(--ink);font-weight:700}
+  .code .pr{color:var(--faint)}
+  .code .lhs,.code .rhs{border-radius:5px;padding:0 2px;transition:background .25s ease,box-shadow .25s ease}
+  .code .lhs.hot{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+  .code .rhs.hot{background:var(--teal-soft);box-shadow:inset 0 0 0 1px var(--teal)}
+  .filetag{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:10px 16px 2px}
+
+  /* stage */
+  .stage-wrap{padding:8px 8px 10px}
+  svg.stage{width:100%;height:auto;display:block;aspect-ratio:680/520}
+  .stage text{font-family:'JetBrains Mono',monospace;fill:var(--ink)}
+  .zoneLabel{font-size:11px;letter-spacing:.14em;fill:var(--faint)}
+  .zone{fill:var(--panel-3);stroke:var(--line)}
+  .sv{transition:opacity .38s ease}
+
+  .chip .box{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+  .chip .nm{font-size:14px;font-weight:500;fill:var(--ink)}
+  .chip .sub{font-size:10px;fill:var(--muted)}
+
+  .obj .box{stroke-width:1.5}
+  .obj.grey .box{fill:var(--grey-soft);stroke:var(--grey)}
+  .obj.amber .box{fill:var(--amber-soft);stroke:var(--amber)}
+  .obj.teal  .box{fill:var(--teal-soft);stroke:var(--teal)}
+  .obj .kind{font-size:10px;letter-spacing:.1em;fill:var(--muted)}
+  .obj .onm{font-size:14.5px;font-weight:700;fill:var(--ink)}
+  .obj .note{font-size:10.5px;fill:var(--muted)}
+  .obj.grey .onm{fill:var(--grey)}
+
+  .arrow{fill:none;stroke:var(--accent);stroke-width:2.4}
+  .arrow.func{stroke:var(--amber);stroke-width:2.2}
+  #mk-accent path{fill:var(--accent)}
+  #mk-amber path{fill:var(--amber)}
+
+  .funcLabel{font-size:10.5px;fill:var(--amber)}
+
+  svg.stage.calling #AR3, svg.stage.calling #ARfunc{stroke-dasharray:7 5;animation:flow 1s linear infinite}
+  svg.stage.calling .obj.amber .box, svg.stage.calling .obj.teal .box{animation:pulse 1.2s ease-in-out infinite}
+  @keyframes flow{to{stroke-dashoffset:-24}}
+  @keyframes pulse{0%,100%{stroke-width:1.5}50%{stroke-width:3.2}}
+
+  .ghost{font-size:13px;fill:var(--faint)}
+
+  /* caption + controls */
+  .caption{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);min-height:96px}
+  .cap-lead{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,2.6vw,19px);line-height:1.5;margin:0;color:var(--ink)}
+  .cap-lead b{font-weight:600}
+  .cap-lead .mono{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--panel-2);padding:1px 5px;border-radius:5px}
+  .cap-sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin:10px 0 0;display:flex;align-items:center;gap:8px}
+  .cap-sub::before{content:"→";color:var(--accent)}
+
+  .controls{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+  button{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;cursor:pointer;transition:transform .1s ease,background .2s ease,border-color .2s ease}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button:active:not(:disabled){transform:translateY(1px)}
+  button:disabled{opacity:.4;cursor:default}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .dots{display:flex;gap:7px;margin:0 auto}
+  .dots i{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .2s,transform .2s;cursor:pointer}
+  .dots i.on{background:var(--accent);transform:scale(1.25)}
+  .step-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+
+  .punch{margin-top:22px;border-left:3px solid var(--teal);background:var(--teal-soft);border-radius:0 12px 12px 0;padding:14px 18px}
+  .punch p{margin:0;font-family:'Newsreader',Georgia,serif;font-size:15.5px;line-height:1.55;color:var(--ink)}
+  .punch code{font-family:'JetBrains Mono',monospace;font-size:.84em;background:var(--panel);padding:1px 5px;border-radius:5px;border:1px solid var(--line)}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Python · names &amp; decorators</p>
+  <h1>Rebinding say_whee</h1>
+  <p class="lede">Why <code>from quiet_night import say_whee</code> hands you the wrapped function, not the <code>def</code> you wrote. Step through the file the way Python runs it.</p>
+
+  <div class="grid">
+    <!-- CODE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="name">quiet_night.py</span>
+        <span class="dot3"><i></i><i></i><i></i></span>
+      </div>
+      <div class="code" id="code">
+        <div class="ln" id="Lm1"><span class="kw">from</span> datetime <span class="kw">import</span> datetime</div>
+        <div class="sep"></div>
+        <div class="ln" id="Lm3"><span class="kw">def</span> <span class="fn">not_during_the_night</span>(func):</div>
+        <div class="ln" id="Lm4">    <span class="kw">def</span> <span class="fn">wrapper</span>():</div>
+        <div class="ln" id="Lm5">        <span class="kw">if</span> 7 &lt;= datetime.now().hour &lt; 22:</div>
+        <div class="ln" id="Lm6">            func()</div>
+        <div class="ln" id="Lm7">        <span class="kw">else</span>:</div>
+        <div class="ln" id="Lm8">            <span class="kw">pass</span>  <span class="cm"># neighbors are asleep</span></div>
+        <div class="ln" id="Lm9">    <span class="kw">return</span> wrapper</div>
+        <div class="sep"></div>
+        <div class="ln" id="Lm11"><span class="kw">def</span> <span class="fn">say_whee</span>():</div>
+        <div class="ln" id="Lm12">    print(<span class="str">"Whee!"</span>)</div>
+        <div class="sep"></div>
+        <div class="ln" id="Lm14"><span class="lhs">say_whee</span> = <span class="rhs">not_during_the_night(say_whee)</span></div>
+      </div>
+      <div class="filetag">your file · REPL</div>
+      <div class="code" style="padding-top:2px">
+        <div class="ln" id="Lc1"><span class="pr">&gt;&gt;&gt;</span> <span class="kw">from</span> quiet_night <span class="kw">import</span> say_whee</div>
+        <div class="ln" id="Lc2"><span class="pr">&gt;&gt;&gt;</span> say_whee()</div>
+      </div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="card stage-wrap">
+      <svg class="stage" id="stage" viewBox="0 0 680 520" role="img" aria-label="Diagram of names binding to function objects in memory">
+        <defs>
+          <marker id="mk-accent" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z"/></marker>
+          <marker id="mk-amber" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z"/></marker>
+        </defs>
+
+        <!-- zones -->
+        <text class="zoneLabel" x="24" y="40">NAMES · labels</text>
+        <text class="zoneLabel" x="406" y="40">OBJECTS · in memory</text>
+        <rect class="zone" x="20" y="52" width="258" height="444" rx="16"/>
+        <rect class="zone" x="402" y="52" width="258" height="444" rx="16"/>
+
+        <!-- arrows (under boxes) -->
+        <path class="arrow sv" id="AR1"  d="M262 114 L408 112" marker-end="url(#mk-accent)"/>
+        <path class="arrow sv" id="AR2B" d="M262 224 L408 236" marker-end="url(#mk-accent)"/>
+        <path class="arrow sv" id="AR2C" d="M262 224 C 322 224, 352 406, 408 406" marker-end="url(#mk-accent)"/>
+        <path class="arrow sv" id="AR3"  d="M262 410 L408 408" marker-end="url(#mk-accent)"/>
+        <path class="arrow func sv" id="ARfunc" d="M528 350 L528 284" marker-end="url(#mk-amber)"/>
+        <text class="funcLabel sv" id="ARfuncLabel" x="536" y="322">func</text>
+
+        <!-- name chips -->
+        <g class="chip sv" id="N1">
+          <rect class="box" x="36" y="92" width="226" height="44" rx="10"/>
+          <text class="nm" x="49" y="120">not_during_the_night</text>
+        </g>
+        <g class="chip sv" id="N2">
+          <rect class="box" x="36" y="200" width="226" height="50" rx="10"/>
+          <text class="nm" x="49" y="222">say_whee</text>
+          <text class="sub" x="49" y="240">in quiet_night</text>
+        </g>
+        <g class="chip sv" id="N3">
+          <rect class="box" x="36" y="386" width="226" height="50" rx="10"/>
+          <text class="nm" x="49" y="408">say_whee</text>
+          <text class="sub" x="49" y="426">in your file · after import</text>
+        </g>
+
+        <!-- objects -->
+        <g class="obj grey sv" id="OA">
+          <rect class="box" x="418" y="84" width="226" height="56" rx="12"/>
+          <text class="kind" x="434" y="106">FUNCTION OBJECT</text>
+          <text class="onm" x="434" y="128">not_during_the_night</text>
+        </g>
+        <g class="obj amber sv" id="OB">
+          <rect class="box" x="418" y="196" width="226" height="84" rx="12"/>
+          <text class="kind" x="434" y="217">FUNCTION OBJECT · the original</text>
+          <text class="onm" x="434" y="241">say_whee</text>
+          <text class="note" x="434" y="263">prints "Whee!"</text>
+        </g>
+        <g class="obj teal sv" id="OC">
+          <rect class="box" x="418" y="352" width="226" height="112" rx="12"/>
+          <text class="kind" x="434" y="374">FUNCTION OBJECT · built by decorator</text>
+          <text class="onm" x="434" y="398">wrapper</text>
+          <text class="note" x="434" y="420">checks the hour, then maybe calls</text>
+          <text class="note" x="434" y="438">holds func → the original</text>
+        </g>
+
+        <!-- ghost prompt for step 0 -->
+        <text class="ghost sv" id="ghost" x="340" y="278" text-anchor="middle">Press  Next ▸  to run the file</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- caption -->
+  <div class="caption">
+    <p class="cap-lead" id="capLead"></p>
+    <p class="cap-sub" id="capSub"></p>
+  </div>
+
+  <div class="controls">
+    <button id="prev" aria-label="Previous step">◂ Prev</button>
+    <div class="dots" id="dots" role="tablist" aria-label="Steps"></div>
+    <span class="step-count" id="count"></span>
+    <button id="next" class="primary" aria-label="Next step">Next ▸</button>
+    <button id="reset" aria-label="Reset to start">Reset</button>
+  </div>
+
+  <div class="punch">
+    <p>The line <code>say_whee = not_during_the_night(say_whee)</code> is <b>exactly</b> what writing <code>@not_during_the_night</code> above the <code>def</code> does. A decorator isn't magic — it's this name-rebinding, spelled with an <code>@</code>.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var el = function(id){ return document.getElementById(id); };
+  var stageIds = ['N1','N2','N3','OA','OB','OC','AR1','AR2B','AR2C','AR3','ARfunc','ARfuncLabel','ghost'];
+
+  var steps = [
+    { show:['ghost'], on:[], hot:null,
+      lead:'Importing a module <b>runs the whole file once</b>, top to bottom. Keep your eye on the name <span class="mono">say_whee</span> as each line executes.',
+      sub:'nothing has run yet' },
+    { show:['N1','OA','AR1'], on:['Lm3'], hot:null,
+      lead:'<span class="mono">def</span> is really an <b>assignment</b>. It builds a function object and binds the name <span class="mono">not_during_the_night</span> to it.',
+      sub:'not_during_the_night  →  <function>' },
+    { show:['N1','OA','AR1','N2','OB','AR2B'], on:['Lm11','Lm12'], hot:null,
+      lead:'Same thing here. The name <span class="mono">say_whee</span> now points at the <b>original</b> "Whee!" function.',
+      sub:'say_whee  →  <original>' },
+    { show:['N1','OA','AR1','N2','OB','AR2B','OC','ARfunc','ARfuncLabel'], on:['Lm14'], hot:'rhs',
+      lead:'The right side runs first. Calling the decorator builds a <b>brand-new</b> function, <span class="mono">wrapper</span>, that remembers the original as its own <span class="mono">func</span>. Nothing is rebound yet.',
+      sub:'wrapper created ·  wrapper.func → original' },
+    { show:['N1','OA','AR1','N2','OB','OC','ARfunc','ARfuncLabel','AR2C'], on:['Lm14'], hot:'lhs', dimB:true,
+      lead:'Now the <span class="mono">=</span> runs. It <b>moves the say_whee label</b> off the original and onto <span class="mono">wrapper</span>. The original still exists — but only inside wrapper.',
+      sub:'say_whee → wrapper   (was → original)' },
+    { show:['N1','OA','AR1','N2','OB','OC','ARfunc','ARfuncLabel','AR2C','N3','AR3'], on:['Lc1'], dimB:true,
+      lead:'<span class="mono">import</span> doesn\'t re-read your source or pick a <span class="mono">def</span>. It copies the <b>current value</b> of the name <span class="mono">say_whee</span> — and that value is <span class="mono">wrapper</span>.',
+      sub:'your say_whee  →  wrapper' },
+    { show:['N1','OA','AR1','N2','OB','OC','ARfunc','ARfuncLabel','AR2C','N3','AR3'], on:['Lc2'], calling:true,
+      lead:'So <span class="mono">say_whee()</span> runs <b>wrapper</b>, which checks the hour and only then calls the original. That\'s the whole trick.',
+      sub:'wrapper()  →  (if daytime) original()' }
+  ];
+
+  var i = 0;
+  var stage = el('stage'), codeLns = document.querySelectorAll('.code .ln');
+  var lhs = document.querySelector('#Lm14 .lhs'), rhs = document.querySelector('#Lm14 .rhs');
+
+  // build dots
+  var dotsWrap = el('dots');
+  steps.forEach(function(_,k){
+    var d = document.createElement('i');
+    d.setAttribute('role','tab'); d.setAttribute('aria-label','Step '+(k+1));
+    d.addEventListener('click', function(){ i=k; render(); });
+    dotsWrap.appendChild(d);
+  });
+
+  function render(){
+    var s = steps[i];
+    var vis = {}; s.show.forEach(function(id){ vis[id]=1; });
+    stageIds.forEach(function(id){
+      var o = vis[id] ? 1 : 0;
+      if(id==='OB' && s.dimB) o = o ? 0.4 : 0;
+      el(id).style.opacity = o;
+    });
+    stage.classList.toggle('calling', !!s.calling);
+
+    // code highlights
+    codeLns.forEach(function(l){ l.classList.remove('on'); });
+    (s.on||[]).forEach(function(id){ var l=el(id); if(l) l.classList.add('on'); });
+    lhs.classList.toggle('hot', s.hot==='lhs');
+    rhs.classList.toggle('hot', s.hot==='rhs');
+
+    // caption
+    el('capLead').innerHTML = s.lead;
+    el('capSub').textContent = s.sub;
+
+    // controls
+    el('prev').disabled = (i===0);
+    el('next').disabled = (i===steps.length-1);
+    el('count').textContent = (i+1)+' / '+steps.length;
+    dotsWrap.querySelectorAll('i').forEach(function(d,k){ d.classList.toggle('on', k===i); });
+  }
+
+  el('next').addEventListener('click', function(){ if(i<steps.length-1){i++;render();} });
+  el('prev').addEventListener('click', function(){ if(i>0){i--;render();} });
+  el('reset').addEventListener('click', function(){ i=0; render(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'){ if(i<steps.length-1){i++;render();} }
+    else if(e.key==='ArrowLeft'){ if(i>0){i--;render();} }
+  });
+
+  render();
+})();
+</script>
+
+</body></html>

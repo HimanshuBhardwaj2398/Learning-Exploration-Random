@@ -1,0 +1,820 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>3Sum Dissected</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#E8EDEF; --panel:#F7FAFB; --panel-2:#DFE7EA; --ink:#10242B; --ink-2:#4E656E;
+  --ink-3:#7A8F97; --rule:#C2D2D7; --rule-2:#AEC2C9;
+  --left:#076A72; --left-bg:#D3E7E8; --right:#AD5307; --right-bg:#F6E2CE;
+  --anchor:#5B3E9B; --anchor-bg:#E2DAF2;
+  --hit:#1C6E45; --hit-bg:#D4E8DC; --gone:#9DAEB5; --gone-bg:#DDE4E6;
+  --warn:#A32B1C; --warn-bg:#F4DED9;
+  --code-bg:#12272E; --code-ink:#DCE8EA; --code-kw:#7FD1C4; --code-str:#E8B07A;
+  --code-com:#7C949B; --code-num:#C7B3EA; --code-fn:#9CC5E8;
+  --shadow:0 1px 2px rgba(16,36,43,.07),0 8px 24px -12px rgba(16,36,43,.22);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1619; --panel:#152328; --panel-2:#1D2F35; --ink:#E2EDEF; --ink-2:#9AB0B7;
+    --ink-3:#71888F; --rule:#27393F; --rule-2:#34494F;
+    --left:#4FC6CE; --left-bg:#11373B; --right:#F0A254; --right-bg:#3D2812;
+    --anchor:#B4A0EC; --anchor-bg:#2A2247;
+    --hit:#5FC790; --hit-bg:#123328; --gone:#5C7178; --gone-bg:#1B2A2F;
+    --warn:#F0837A; --warn-bg:#3A1C19;
+    --code-bg:#0A1418; --code-ink:#D4E3E6;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1619; --panel:#152328; --panel-2:#1D2F35; --ink:#E2EDEF; --ink-2:#9AB0B7;
+  --ink-3:#71888F; --rule:#27393F; --rule-2:#34494F;
+  --left:#4FC6CE; --left-bg:#11373B; --right:#F0A254; --right-bg:#3D2812;
+  --anchor:#B4A0EC; --anchor-bg:#2A2247;
+  --hit:#5FC790; --hit-bg:#123328; --gone:#5C7178; --gone-bg:#1B2A2F;
+  --warn:#F0837A; --warn-bg:#3A1C19;
+  --code-bg:#0A1418; --code-ink:#D4E3E6;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 72px}
+h1,h2,h3,h4{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(2.1rem,7vw,3.1rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.5rem,4.4vw,2rem);letter-spacing:-.01em;margin-bottom:.55em}
+h3{font-size:1.2rem;margin:2em 0 .5em}
+h4{font-size:1rem;font-family:"IBM Plex Sans",sans-serif;font-weight:600;margin:0 0 .4em}
+h2+p,h2+.lede,h3:first-child{margin-top:0}
+p{margin:0 0 1em}
+a{color:var(--left)}
+.lede{font-size:1.08rem;color:var(--ink-2);max-width:62ch}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+code,kbd{font-family:"IBM Plex Mono",monospace}
+p code,li code,td code,.say code{background:var(--panel-2);padding:.1em .34em;border-radius:3px;font-size:.88em}
+header.top{border-bottom:1px solid var(--rule);padding-block:44px 30px}
+.ruler{display:flex;align-items:flex-end;gap:3px;height:15px;margin-bottom:22px;overflow:hidden}
+.ruler i{display:block;width:1px;background:var(--rule-2);height:5px;flex:none}
+.ruler i:nth-child(3n+1){height:13px;background:var(--anchor)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:.75rem;padding:4px 10px;border-radius:99px;
+  border:1px solid var(--rule-2);color:var(--ink-2);white-space:nowrap}
+.pill.hot{border-color:var(--anchor);color:var(--anchor);background:var(--anchor-bg)}
+section{padding-block:40px;border-top:1px solid var(--rule)}
+.snum{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;
+  color:var(--right);font-weight:600;display:block;margin-bottom:8px}
+.body{max-width:66ch}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:2px;
+  box-shadow:var(--shadow);margin:26px 0;overflow:hidden}
+.panel-hd{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between;
+  padding:13px 16px;border-bottom:1px solid var(--rule);background:var(--panel-2)}
+.panel-hd .t{font-weight:600;font-size:.94rem}
+.panel-hd .s{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink-2)}
+.panel-bd{padding:18px 16px}
+.tape{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.cellcol{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.cell{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.95rem;
+  border:1px solid var(--rule-2);background:var(--panel);border-radius:2px;
+  transition:background .18s,border-color .18s,color .18s}
+.cell.l{border-color:var(--left);background:var(--left-bg);color:var(--left);border-width:2px}
+.cell.r{border-color:var(--right);background:var(--right-bg);color:var(--right);border-width:2px}
+.cell.a{border-color:var(--anchor);background:var(--anchor-bg);color:var(--anchor);border-width:2px}
+.cell.hit{border-color:var(--hit);background:var(--hit-bg);color:var(--hit);border-width:2px}
+.cell.done{color:var(--gone);background:var(--gone-bg);border-color:var(--rule)}
+.cell.suffix{background:var(--panel-2)}
+.idx{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--ink-3)}
+.ptr{font-family:"IBM Plex Mono",monospace;font-size:.66rem;font-weight:600;height:14px;white-space:nowrap}
+.ptr.l{color:var(--left)} .ptr.r{color:var(--right)} .ptr.a{color:var(--anchor)}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;
+  padding-top:14px;border-top:1px dashed var(--rule)}
+button.step,select,input[type=text]{font-family:"IBM Plex Sans",sans-serif;font-size:.86rem;
+  padding:7px 12px;min-height:38px;border:1px solid var(--rule-2);background:var(--panel);
+  color:var(--ink);border-radius:2px}
+button.step{font-weight:500;cursor:pointer;transition:background .15s,border-color .15s}
+button.step:hover:not(:disabled){background:var(--panel-2);border-color:var(--ink-3)}
+button.step:disabled{opacity:.4;cursor:not-allowed}
+button.step.go{background:var(--left);border-color:var(--left);color:var(--panel)}
+input[type=text]{font-family:"IBM Plex Mono",monospace;min-width:0}
+:focus-visible{outline:2px solid var(--right);outline-offset:2px}
+.count{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-2);margin-left:auto}
+.say{margin-top:14px;padding:12px 14px;background:var(--panel-2);border-left:3px solid var(--rule-2);
+  font-size:.92rem;line-height:1.55;min-height:3.4em}
+.say.low{border-left-color:var(--left)} .say.high{border-left-color:var(--right)}
+.say.hit{border-left-color:var(--hit);background:var(--hit-bg)}
+.say.skip{border-left-color:var(--anchor);background:var(--anchor-bg)}
+.say.bad{border-left-color:var(--warn);background:var(--warn-bg)}
+.say .mono{font-family:"IBM Plex Mono",monospace;font-size:.92em}
+.bag{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;
+  font-family:"IBM Plex Mono",monospace;font-size:.8rem;min-height:30px}
+.trip{padding:3px 9px;border-radius:2px;background:var(--hit-bg);color:var(--hit);
+  border:1px solid var(--hit)}
+.trip.dup{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.bag .lbl{color:var(--ink-3);font-family:"IBM Plex Sans",sans-serif;font-size:.8rem}
+/* reduction */
+.red-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;
+  border:1px solid var(--rule);border-radius:2px;background:var(--panel);margin-bottom:8px;
+  cursor:pointer;transition:border-color .15s,background .15s;width:100%;text-align:left;
+  font-family:inherit;font-size:.88rem;color:var(--ink)}
+.red-row:hover{border-color:var(--anchor)}
+.red-row.on{border-color:var(--anchor);background:var(--anchor-bg);border-width:2px}
+.red-row .k{font-family:"IBM Plex Mono",monospace;color:var(--anchor);font-weight:600;white-space:nowrap}
+.red-row .v{font-family:"IBM Plex Mono",monospace;color:var(--ink-2)}
+.red-row .tg{font-family:"IBM Plex Mono",monospace;color:var(--hit);font-weight:600;white-space:nowrap}
+/* toggles */
+.toggles{display:grid;gap:8px;grid-template-columns:1fr}
+@media(min-width:620px){.toggles{grid-template-columns:repeat(3,1fr)}}
+.tog{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--rule);
+  border-radius:2px;background:var(--panel);cursor:pointer;font-size:.86rem;line-height:1.45}
+.tog:hover{background:var(--panel-2)}
+.tog input{margin:3px 0 0;accent-color:var(--hit);width:16px;height:16px;flex:none}
+.tog.off{border-color:var(--warn);background:var(--warn-bg)}
+.tog code{font-size:.82em}
+.tog .sub{display:block;color:var(--ink-3);font-size:.78rem;margin-top:2px}
+.verdict{margin-top:16px;padding:13px 15px;border-radius:2px;font-size:.92rem;line-height:1.55}
+.verdict.ok{background:var(--hit-bg);color:var(--hit);border:1px solid var(--hit)}
+.verdict.no{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}
+.outrow{display:grid;gap:12px;grid-template-columns:1fr;margin-top:14px}
+@media(min-width:620px){.outrow{grid-template-columns:1fr 1fr}}
+.outbox{border:1px solid var(--rule);border-radius:2px;padding:11px 13px;background:var(--panel)}
+.outbox .k{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:7px}
+/* work triangle */
+.tri{display:flex;flex-direction:column;gap:3px;align-items:flex-start;margin:6px 0}
+.tri-row{display:flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;font-size:.72rem}
+.tri-row .lb{color:var(--ink-3);width:5.5em;flex:none;text-align:right}
+.tri-bar{height:15px;background:var(--anchor-bg);border:1px solid var(--anchor);border-radius:1px}
+.tri-row .n{color:var(--ink-2)}
+pre{background:var(--code-bg);color:var(--code-ink);border-radius:2px;margin:16px 0;
+  padding:15px 16px;overflow-x:auto;font-size:.84rem;line-height:1.62;
+  font-family:"IBM Plex Mono",monospace;-webkit-overflow-scrolling:touch}
+pre .kw{color:var(--code-kw)} pre .st{color:var(--code-str)} pre .cm{color:var(--code-com);font-style:italic}
+pre .nu{color:var(--code-num)} pre .fn{color:var(--code-fn)}
+.cx{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-2);
+  display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:-6px;margin-bottom:4px}
+.tbl{overflow-x:auto;margin:20px 0;border:1px solid var(--rule);border-radius:2px;background:var(--panel)}
+table.d{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px}
+table.d th{text-align:left;font-weight:600;font-size:.74rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding:11px 14px;border-bottom:1px solid var(--rule-2);background:var(--panel-2);white-space:nowrap}
+table.d td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5}
+table.d tr:last-child td{border-bottom:none}
+table.d td.mono,table.d td .mono{font-family:"IBM Plex Mono",monospace;font-size:.86em}
+table.d td.bad{color:var(--warn);font-weight:500}
+table.d td.good{color:var(--hit);font-weight:500}
+.inv{border-left:3px solid var(--anchor);background:var(--anchor-bg);padding:11px 14px;margin:14px 0;
+  font-size:.9rem;line-height:1.55}
+.inv .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--anchor);display:block;margin-bottom:3px;font-weight:600}
+.err{color:var(--warn);font-size:.82rem;margin-left:4px}
+ul.tight{padding-left:20px;margin:0 0 1em}
+ul.tight li{margin-bottom:.35em}
+.two{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:680px){.two{grid-template-columns:1fr 1fr}}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:2px;padding:16px}
+.sheet h4{margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.sheet ul{margin:0;padding-left:18px;font-size:.88rem;line-height:1.6}
+.sheet li{margin-bottom:.3em}
+.foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--rule);font-size:.85rem;color:var(--ink-3)}
+.foot a{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="ruler" aria-hidden="true"></div>
+  <span class="eyebrow">Pattern 02 · shape D · fix one, two-pointer the rest</span>
+  <h1>3Sum Dissected</h1>
+  <p class="lede" style="margin-top:14px">3Sum is not a new pattern. It is Two Sum II run once per
+  element — a reduction you already know. What makes it a Medium is the bookkeeping that keeps the
+  answers unique, and that bookkeeping is where almost everyone loses the problem.</p>
+  <div class="meta">
+    <span class="pill hot">LeetCode 15</span>
+    <span class="pill">O(n²) time · O(1) space</span>
+    <span class="pill">Anchor problem</span>
+    <span class="pill">n ≤ 3000</span>
+  </div>
+</header>
+
+<!-- 01 -->
+<section>
+  <span class="snum">01 — the reduction</span>
+  <h2>Pin one number and the rest is Two Sum</h2>
+  <div class="body">
+    <p>The brute force is three nested loops: O(n³), about 27 billion operations at the problem's limit
+    of n = 3000. Far too slow. But look at what happens when you <em>fix</em> the first element.</p>
+    <p>If the triplet must sum to zero and you have committed to <code>nums[i]</code>, then the other two
+    must sum to <code>−nums[i]</code>. That is Two Sum with a target — and on a sorted array, you solve
+    that with converging pointers in one pass. Run it once per anchor and you have O(n²).</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd"><span class="t">One anchor, one Two Sum sub-problem</span><span class="s">click a row</span></div>
+    <div class="panel-bd">
+      <div id="red-tape"></div>
+      <div style="margin-top:16px" id="red-rows"></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <h3>Why sorting first is doing three jobs at once</h3>
+    <ul class="tight">
+      <li><strong>It enables the elimination.</strong> Converging pointers only work because a sorted
+      order means "sum too small" proves the small end is useless.</li>
+      <li><strong>It puts duplicates next to each other.</strong> That is what makes skipping them an
+      O(1) neighbour check rather than a set lookup.</li>
+      <li><strong>It canonicalises each triplet.</strong> Every answer comes out in ascending order, so
+      two triplets are equal exactly when they look equal. No sorting inside the comparison.</li>
+    </ul>
+    <p>Sorting costs O(n log n), which vanishes next to the O(n²) scan. And note what you are
+    <em>allowed</em> to lose by sorting: 3Sum asks for the triplet <em>values</em>, not their original
+    indices. That is precisely why sorting is legal here and illegal in Two Sum.</p>
+  </div>
+</section>
+
+<!-- 02 -->
+<section>
+  <span class="snum">02 — the run</span>
+  <h2>Every step, with the reason for it</h2>
+  <div class="body">
+    <p>Watch the anchor advance and the inner pointers converge. The collected triplets build up at the
+    bottom. Type your own array to see it behave on input you choose.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd"><span class="t">3Sum · full guards</span><span class="s" id="main-src"></span></div>
+    <div class="panel-bd">
+      <div class="ctl" style="border:none;padding-top:0;margin-top:0;margin-bottom:14px">
+        <label for="main-input" style="font-size:.84rem;color:var(--ink-2)">Array</label>
+        <input type="text" id="main-input" value="-1, 0, 1, 2, -1, -4" style="flex:1"
+               aria-label="Comma-separated integers" spellcheck="false">
+        <button class="step" id="main-run">Run</button>
+        <span class="err" id="main-err" hidden></span>
+      </div>
+      <div id="main-tape"></div>
+      <div class="bag" id="main-bag"></div>
+      <div class="say" id="main-say"></div>
+      <div class="ctl" id="main-ctl"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section>
+  <span class="snum">03 — the dedup lab</span>
+  <h2>Switch a guard off and watch it break</h2>
+  <div class="body">
+    <p>The problem says <em>unique</em> triplets. Three guards enforce that, and the fastest way to
+    understand each one is to remove it. Uncheck a box below: the run re-executes and any triplet
+    emitted twice turns red.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd"><span class="t">Ablation</span><span class="s" id="lab-src"></span></div>
+    <div class="panel-bd">
+      <div class="ctl" style="border:none;padding-top:0;margin-top:0;margin-bottom:14px">
+        <label for="lab-array" style="font-size:.84rem;color:var(--ink-2)">Array</label>
+        <select id="lab-array" style="flex:1">
+          <option value="-1,0,1,2,-1,-4">-1, 0, 1, 2, -1, -4 — the classic</option>
+          <option value="-2,0,0,2,2">-2, 0, 0, 2, 2 — two paths to one triplet</option>
+          <option value="-1,-1,0,1,2">-1, -1, 0, 1, 2 — repeated anchor</option>
+          <option value="0,0,0,0">0, 0, 0, 0 — everything identical</option>
+          <option value="-4,-2,-2,0,2,2,4">-4, -2, -2, 0, 2, 2, 4 — duplicates everywhere</option>
+        </select>
+      </div>
+      <div class="toggles" id="lab-togs"></div>
+      <div class="outrow">
+        <div class="outbox"><span class="k">What the code emits</span><div class="bag" id="lab-out"></div></div>
+        <div class="outbox"><span class="k">The correct answer</span><div class="bag" id="lab-truth"></div></div>
+      </div>
+      <div class="verdict" id="lab-verdict"></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <h3>What each guard is actually for</h3>
+    <p><strong>Guard 1, the anchor.</strong> If two anchors hold the same value, the second one searches
+    a smaller suffix of the same array and re-finds triplets the first already collected. Skipping
+    repeated anchors is not an optimisation — it is required.</p>
+    <p><strong>Guards 2 and 3, the inner pointers.</strong> Within a single anchor's sweep, the same
+    pair of <em>values</em> can be reached through different <em>indices</em>. On
+    <code>[-2, 0, 0, 2, 2]</code> the anchor <code>-2</code> finds <code>(0, 2)</code> at indices (1, 4)
+    and again at (2, 3) — one triplet, two paths.</p>
+    <div class="inv">
+      <span class="lbl">The part nobody tells you</span>
+      A triplet is pinned down by <strong>any two of its three values</strong> — fix the anchor and the
+      left value, and the right value is forced to be <code>−anchor−left</code>. So deduping the anchor
+      plus <em>either</em> inner pointer is already enough to guarantee uniqueness. Over 3000 random
+      arrays with heavy duplicates, anchor + left alone and anchor + right alone each emitted zero
+      duplicates. Keep both anyway: they cost nothing, they read symmetrically, and the argument for
+      dropping one is not something you want to be reconstructing under interview pressure.
+    </div>
+    <p>The measured ablation over those 3000 arrays, for comparison with what you just produced:</p>
+  </div>
+
+  <div class="tbl">
+    <table class="d">
+      <thead><tr><th>Guards kept</th><th>Arrays emitting duplicates</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">all three</td><td class="mono">0 / 3000</td><td class="good">Correct</td></tr>
+        <tr><td class="mono">anchor + left</td><td class="mono">0 / 3000</td><td class="good">Correct — sufficient</td></tr>
+        <tr><td class="mono">anchor + right</td><td class="mono">0 / 3000</td><td class="good">Correct — sufficient</td></tr>
+        <tr><td class="mono">anchor only</td><td class="mono">1050 / 3000</td><td class="bad">Duplicates</td></tr>
+        <tr><td class="mono">inner two only</td><td class="mono">1543 / 3000</td><td class="bad">Duplicates</td></tr>
+        <tr><td class="mono">none</td><td class="mono">1738 / 3000</td><td class="bad">Duplicates</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 04 -->
+<section>
+  <span class="snum">04 — the direction trap</span>
+  <h2>Why the anchor skip looks backwards</h2>
+  <div class="body">
+    <p>The anchor guard is written <code>nums[i] == nums[i-1]</code> — comparing with the element
+    <em>behind</em>. Reaching for <code>nums[i] == nums[i+1]</code> feels equally natural and is wrong.
+    The difference is which copy of a repeated value survives.</p>
+    <ul class="tight">
+      <li><code>nums[i] == nums[i-1]</code> keeps the <strong>first</strong> copy, which sees the
+      largest suffix — including all the other copies of itself.</li>
+      <li><code>nums[i] == nums[i+1]</code> keeps the <strong>last</strong> copy, whose suffix no longer
+      contains its own duplicates. Any triplet needing two of that value is gone.</li>
+    </ul>
+    <p>On the classic input this quietly loses a triplet:</p>
+  </div>
+
+  <div class="tbl">
+    <table class="d">
+      <thead><tr><th>Anchor guard</th><th>Output on <span class="mono">[-1,0,1,2,-1,-4]</span></th><th>Over 3000 random arrays</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">nums[i] == nums[i-1]</td><td class="mono good">[[-1,-1,2], [-1,0,1]]</td><td class="good">correct every time</td></tr>
+        <tr><td class="mono">nums[i] == nums[i+1]</td><td class="mono bad">[[-1,0,1]] — lost [-1,-1,2]</td><td class="bad">wrong on 1758 / 3000</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="body">
+    <p>It is a perfect example of a bug that survives casual testing: it returns a correctly-formed,
+    plausible-looking list. Only an input where a triplet needs two copies of the anchor value exposes
+    it — which is exactly the input the LeetCode example uses.</p>
+    <h3>Two other decisions worth being able to defend</h3>
+    <p><strong>Moving both pointers after a hit.</strong> Once you have recorded a triplet, neither
+    endpoint can appear in another triplet with this anchor — the partner of each is uniquely
+    determined, and you just used it. Advancing only one still gives correct output if your dedup is
+    right, but it wastes work: on a 300-element array, moving both took 4,760 inner steps against 5,225.</p>
+    <p><strong>The <code>nums[i] &gt; 0</code> break.</strong> The array is sorted, so once the anchor is
+    positive every remaining element is too, and three positives cannot sum to zero. This is an
+    optimisation, not a correctness guard — removing it changed no answer across all 3000 test arrays.
+    Say that distinction out loud; it shows you know which lines you can afford to lose.</p>
+  </div>
+</section>
+
+<!-- 05 -->
+<section>
+  <span class="snum">05 — the cost</span>
+  <h2>Where the n² comes from</h2>
+  <div class="body">
+    <p>Each anchor runs one converging pass over what is left to its right. Anchor 0 sweeps
+    <em>n−1</em> elements, anchor 1 sweeps <em>n−2</em>, and so on. Stack those sweeps and you get a
+    triangle — half of an n×n square.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-hd"><span class="t">Inner sweep length per anchor · n = 10</span><span class="s">sum ≈ n²/2</span></div>
+    <div class="panel-bd"><div class="tri" id="tri"></div>
+      <p style="font-size:.86rem;color:var(--ink-2);margin:12px 0 0">Total ≈ n²/2 pointer moves. The
+      sort adds O(n log n), which is smaller and disappears into the bound.</p></div>
+  </div>
+  <div class="body">
+    <p>Measured on random arrays, counting actual inner-loop iterations — the guards and the early break
+    make real runs come in under the worst case, and doubling n reliably quadruples the work:</p>
+  </div>
+  <div class="tbl">
+    <table class="d">
+      <thead><tr><th>n</th><th>Inner steps</th><th>n²/2</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">50</td><td class="mono">533</td><td class="mono">1,250</td><td class="mono">0.43</td></tr>
+        <tr><td class="mono">100</td><td class="mono">2,823</td><td class="mono">5,000</td><td class="mono">0.56</td></tr>
+        <tr><td class="mono">200</td><td class="mono">10,161</td><td class="mono">20,000</td><td class="mono">0.51</td></tr>
+        <tr><td class="mono">400</td><td class="mono">40,851</td><td class="mono">80,000</td><td class="mono">0.51</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="body">
+    <p>At the problem's limit of n = 3000 that is roughly 4.5 million steps — comfortably fast, and the
+    reason the constraints are set exactly there. They are telling you O(n²) is the intended solution.</p>
+  </div>
+</section>
+
+<!-- 06 -->
+<section>
+  <span class="snum">06 — write it from memory</span>
+  <h2>The whole thing, annotated</h2>
+<pre><code class="py">def three_sum(nums: list[int]) -&gt; list[list[int]]:
+    nums.sort()                                    # enables elimination + groups duplicates
+    n, results = len(nums), []
+
+    for i in range(n - 2):
+        if nums[i] &gt; 0:
+            break                                  # optimisation: three positives cannot reach 0
+        if i &gt; 0 and nums[i] == nums[i - 1]:
+            continue                               # GUARD 1 — compare BACKWARD, keep the first copy
+
+        left, right = i + 1, n - 1                 # Two Sum on the suffix, target = -nums[i]
+        while left &lt; right:
+            total = nums[i] + nums[left] + nums[right]
+            if total &lt; 0:
+                left += 1                          # need more
+            elif total &gt; 0:
+                right -= 1                         # need less
+            else:
+                results.append([nums[i], nums[left], nums[right]])
+                left += 1
+                right -= 1                         # both: each endpoint's partner is used up
+                while left &lt; right and nums[left] == nums[left - 1]:
+                    left += 1                      # GUARD 2 — same left value, same triplet
+                while left &lt; right and nums[right] == nums[right + 1]:
+                    right -= 1                     # GUARD 3 — same right value, same triplet
+
+    return results</code></pre>
+  <div class="cx"><span>Time O(n²)</span><span>Space O(1) beyond the output</span><span>Sorting is O(n log n), dominated</span></div>
+
+  <div class="body">
+    <p>Both inner <code>while</code> loops are guarded by <code>left &lt; right</code>. Without it,
+    an array like <code>[0,0,0,0]</code> walks a pointer straight off the end.</p>
+    <h3>The other style you will meet</h3>
+    <p>Many write-ups skip duplicates <em>before</em> advancing rather than after. It is the same
+    algorithm — verified identical on 3000 arrays — so recognise it, pick one, and stay consistent:</p>
+<pre><code class="py">            else:
+                results.append([nums[i], nums[left], nums[right]])
+                while left &lt; right and nums[left] == nums[left + 1]:
+                    left += 1                      # look FORWARD, then step off the run
+                while left &lt; right and nums[right] == nums[right - 1]:
+                    right -= 1
+                left += 1
+                right -= 1</code></pre>
+
+    <h3>Once this one is solid</h3>
+  </div>
+  <div class="tbl">
+    <table class="d">
+      <thead><tr><th>#</th><th>Problem</th><th>The change</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">16</td><td>3Sum Closest</td><td>No exact hit. Track the best <code>abs(total − target)</code> seen and keep converging; no dedup needed, since you return one number.</td></tr>
+        <tr><td class="mono">259</td><td>3Sum Smaller</td><td>Counting, not listing. When <code>total &lt; target</code>, every pointer between left and right also works — add <code>right − left</code> in one shot.</td></tr>
+        <tr><td class="mono">611</td><td>Valid Triangle Number</td><td>Same bulk-counting trick, anchored on the longest side from the right.</td></tr>
+        <tr><td class="mono">18</td><td>4Sum</td><td>One more nested loop and one more dedup level. The generalisation is O(n<sup>k−1</sup>) for k-sum.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="body">
+    <h3>Narrating it in the room</h3>
+    <p>"Brute force is three nested loops, O(n³) — too slow at n = 3000. But if I fix one element, the
+    rest is Two Sum with target minus that element, and on a sorted array Two Sum is a linear
+    converging-pointer scan. So: sort, then for each anchor run that scan. That is O(n²), with
+    O(n log n) for the sort underneath it."</p>
+    <p>"The problem wants unique triplets, so I need to skip duplicates in three places — repeated
+    anchors, and repeated values at each pointer after recording a hit. Sorting is what makes those
+    neighbour checks work. Let me dry-run <code>[-1,0,1,2,-1,-4]</code>, and also check
+    <code>[0,0,0,0]</code> so the skip loops can't run off the end."</p>
+  </div>
+
+  <h2 style="margin-top:44px">Recall card</h2>
+  <div class="two">
+    <div class="sheet">
+      <h4>The skeleton</h4>
+      <ul>
+        <li>Sort</li>
+        <li>For each anchor <code>i</code>: break if positive; skip if same as <code>i−1</code></li>
+        <li>Converge <code>left</code>, <code>right</code> over the suffix</li>
+        <li>On a hit: record, move both, skip both runs</li>
+      </ul>
+    </div>
+    <div class="sheet">
+      <h4>Three guards</h4>
+      <ul>
+        <li><code>nums[i] == nums[i-1]</code> — backward, keeps the first copy</li>
+        <li><code>nums[left] == nums[left-1]</code> after a hit</li>
+        <li><code>nums[right] == nums[right+1]</code> after a hit</li>
+        <li>Both inner loops need <code>left &lt; right</code></li>
+      </ul>
+    </div>
+    <div class="sheet">
+      <h4>Edge cases to state</h4>
+      <ul>
+        <li><code>[]</code>, <code>[0]</code>, <code>[0,0]</code> → empty</li>
+        <li><code>[0,0,0,0]</code> → one triplet, not four</li>
+        <li>All positive or all negative → empty</li>
+        <li>Negatives everywhere — the break relies on sortedness</li>
+      </ul>
+    </div>
+    <div class="sheet">
+      <h4>If you forget a guard</h4>
+      <ul>
+        <li>No anchor skip → repeated triplets across anchors</li>
+        <li>No inner skip → repeated triplets inside one anchor</li>
+        <li>Forward-looking anchor skip → <em>missing</em> triplets</li>
+        <li>No <code>left &lt; right</code> on the skips → index error</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p style="margin-bottom:6px"><strong>Next up:</strong> 42 Trapping Rain Water, the third anchor —
+    where the two-pointer move is justified by an invariant rather than by sorting.</p>
+    <p style="margin:0">Every number on this page came from running the code: the ablation over 3000
+    random arrays, the step counts, and each wrong answer shown.
+    <a href="https://leetcode.com/problems/3sum/">LeetCode 15</a> ·
+    <a href="https://www.hellointerview.com/learn/code/two-pointers/3-sum">Hello Interview walkthrough</a></p>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var rl = document.querySelector('.ruler');
+if (rl){ var s=''; for (var i=0;i<140;i++) s+='<i></i>'; rl.innerHTML = s; }
+
+var PY = /(#[^\n]*)|('[^'\n]*'|"[^"\n]*")|\b(def|return|while|for|in|if|elif|else|not|and|or|break|continue|None|True|False|import|from|lambda|is)\b|\b(len|max|min|range|sorted|abs|int|str|list|append|sort)\b|\b(\d+)\b/g;
+document.querySelectorAll('code.py').forEach(function(el){
+  el.innerHTML = el.innerHTML.replace(PY, function(m, cm, st, kw, fn, nu){
+    if (cm) return '<span class="cm">'+cm+'</span>';
+    if (st) return '<span class="st">'+st+'</span>';
+    if (kw) return '<span class="kw">'+kw+'</span>';
+    if (fn) return '<span class="fn">'+fn+'</span>';
+    return '<span class="nu">'+nu+'</span>';
+  });
+});
+
+/* ───────── engine (mirrors the verified Python) ───────── */
+function run3Sum(input, o){
+  o = o || {};
+  var anchorDD = o.anchorDD !== false, leftDD = o.leftDD !== false,
+      rightDD = o.rightDD !== false, useBreak = o.useBreak !== false, dir = o.dir || 'prev';
+  var nums = input.slice().sort(function(a,b){return a-b;});
+  var n = nums.length, frames = [], res = [];
+  function snap(){ return res.map(function(t){ return t.join(','); }); }
+  for (var i=0;i<n-2;i++){
+    if (useBreak && nums[i] > 0){ frames.push({i:i,l:null,r:null,act:'break',found:snap()}); break; }
+    var skip = anchorDD && (dir==='prev' ? (i>0 && nums[i]===nums[i-1])
+                                         : (i<n-1 && nums[i]===nums[i+1]));
+    if (skip){ frames.push({i:i,l:null,r:null,act:'skipAnchor',found:snap()}); continue; }
+    var l=i+1, r=n-1;
+    frames.push({i:i,l:l,r:r,act:'anchor',target:-nums[i],found:snap()});
+    while (l<r){
+      var sum = nums[i]+nums[l]+nums[r];
+      if (sum<0){ frames.push({i:i,l:l,r:r,sum:sum,target:-nums[i],act:'low',found:snap()}); l++; }
+      else if (sum>0){ frames.push({i:i,l:l,r:r,sum:sum,target:-nums[i],act:'high',found:snap()}); r--; }
+      else {
+        var trip=[nums[i],nums[l],nums[r]], dup = snap().indexOf(trip.join(','))!==-1;
+        res.push(trip);
+        frames.push({i:i,l:l,r:r,sum:0,target:-nums[i],act:'hit',dup:dup,found:snap()});
+        l++; r--;
+        if (leftDD) while (l<r && nums[l]===nums[l-1]){ frames.push({i:i,l:l,r:r,act:'skipLeft',target:-nums[i],found:snap()}); l++; }
+        if (rightDD) while (l<r && nums[r]===nums[r+1]){ frames.push({i:i,l:l,r:r,act:'skipRight',target:-nums[i],found:snap()}); r--; }
+      }
+    }
+  }
+  return {sorted:nums, frames:frames, result:res};
+}
+function brute3(input){
+  var a=input.slice().sort(function(x,y){return x-y;}), out={}, n=a.length;
+  for (var i=0;i<n;i++) for (var j=i+1;j<n;j++) for (var k=j+1;k<n;k++)
+    if (a[i]+a[j]+a[k]===0) out[[a[i],a[j],a[k]].join(',')]=1;
+  return Object.keys(out).sort();
+}
+
+/* ───────── shared bits ───────── */
+function tape(values, marks){
+  var out = '<div class="tape">';
+  for (var i=0;i<values.length;i++){
+    var m = marks[i] || {};
+    out += '<div class="cellcol"><div class="ptr '+(m.topCls||'')+'">'+(m.top||'')+'</div>'
+        +  '<div class="cell '+(m.cls||'')+'">'+values[i]+'</div>'
+        +  '<div class="idx">'+i+'</div></div>';
+  }
+  return out+'</div>';
+}
+function bag(el, list, label){
+  if (!list.length){ el.innerHTML = '<span class="lbl">'+label+' nothing yet</span>'; return; }
+  var seen = {}, html = '<span class="lbl">'+label+'</span>';
+  list.forEach(function(t){
+    var dup = seen[t]; seen[t] = 1;
+    html += '<span class="trip'+(dup?' dup':'')+'">['+t+']</span>';
+  });
+  el.innerHTML = html;
+}
+function parseArr(str){
+  var parts = str.split(/[,\s]+/).filter(function(x){ return x.length; });
+  if (!parts.length) return {err:'Enter some numbers'};
+  if (parts.length > 12) return {err:'Keep it to 12 numbers so the array stays readable'};
+  var out = [];
+  for (var i=0;i<parts.length;i++){
+    if (!/^-?\d+$/.test(parts[i])) return {err:'"'+parts[i]+'" is not a whole number'};
+    var v = parseInt(parts[i],10);
+    if (v < -99 || v > 99) return {err:'Keep values between -99 and 99'};
+    out.push(v);
+  }
+  if (out.length < 3) return {err:'3Sum needs at least 3 numbers'};
+  return {arr:out};
+}
+
+/* ───────── 01 reduction ───────── */
+var RED = [-1,0,1,2,-1,-4].slice().sort(function(a,b){return a-b;});
+var redSel = 1;
+function drawRed(){
+  var marks = {};
+  for (var i=0;i<RED.length;i++){
+    if (i < redSel) marks[i] = {cls:'done'};
+    else if (i === redSel) marks[i] = {cls:'a', top:'anchor', topCls:'a'};
+    else marks[i] = {cls:'suffix'};
+  }
+  document.getElementById('red-tape').innerHTML = tape(RED, marks);
+  var rows = '';
+  for (var k=0;k<RED.length-2;k++){
+    rows += '<button class="red-row'+(k===redSel?' on':'')+'" data-red="'+k+'">'
+         +  '<span class="k">anchor '+RED[k]+'</span>'
+         +  '<span class="v">find a pair in ['+RED.slice(k+1).join(', ')+']</span>'
+         +  '<span class="tg">summing to '+(-RED[k])+'</span></button>';
+  }
+  document.getElementById('red-rows').innerHTML = rows;
+}
+document.getElementById('red-rows').addEventListener('click', function(e){
+  var b = e.target.closest('[data-red]');
+  if (b){ redSel = +b.dataset.red; drawRed(); }
+});
+drawRed();
+
+/* ───────── 02 main stepper ───────── */
+var mainState = null, mainIdx = 0, mainTimer = null;
+var mCtl = document.getElementById('main-ctl');
+mCtl.innerHTML = '<button class="step" data-a="prev">‹ Back</button>'
+  + '<button class="step go" data-a="play">Play</button>'
+  + '<button class="step" data-a="next">Step ›</button>'
+  + '<button class="step" data-a="reset">Reset</button><span class="count"></span>';
+var mPrev=mCtl.querySelector('[data-a=prev]'), mPlay=mCtl.querySelector('[data-a=play]'),
+    mNext=mCtl.querySelector('[data-a=next]'), mReset=mCtl.querySelector('[data-a=reset]'),
+    mCount=mCtl.querySelector('.count');
+
+function mainDraw(){
+  var A = mainState.sorted, fr = mainState.frames[mainIdx], marks = {};
+  for (var i=0;i<A.length;i++) marks[i] = {};
+  if (fr.i !== null && fr.i !== undefined) marks[fr.i] = {cls:'a', top:'anchor', topCls:'a'};
+  if (fr.l !== null && fr.l !== undefined) marks[fr.l] = {cls:'l', top:'left', topCls:'l'};
+  if (fr.r !== null && fr.r !== undefined) marks[fr.r] = {cls:'r', top:'right', topCls:'r'};
+  if (fr.act === 'hit'){ marks[fr.i].cls='hit'; marks[fr.l].cls='hit'; marks[fr.r].cls='hit'; }
+  document.getElementById('main-tape').innerHTML = tape(A, marks);
+  bag(document.getElementById('main-bag'), fr.found, 'Collected:');
+
+  var t, cls = '';
+  if (fr.act==='anchor'){
+    t = 'Anchor <span class="mono">'+A[fr.i]+'</span> at index '+fr.i+'. The other two must sum to '
+      + '<span class="mono">'+fr.target+'</span> — a Two Sum over the suffix.';
+  } else if (fr.act==='skipAnchor'){
+    cls='skip';
+    t = '<b>Guard 1 fires.</b> Anchor <span class="mono">'+A[fr.i]+'</span> repeats the previous value, '
+      + 'so its sweep could only re-find triplets already collected. Skip it.';
+  } else if (fr.act==='break'){
+    cls='skip';
+    t = '<b>Break.</b> Anchor <span class="mono">'+A[fr.i]+'</span> is positive, and the array is sorted, '
+      + 'so everything from here on is positive too. Three positives cannot sum to zero.';
+  } else if (fr.act==='low'){
+    cls='low';
+    t = '<span class="mono">'+A[fr.i]+' + '+A[fr.l]+' + '+A[fr.r]+' = '+fr.sum+'</span>, below zero. '
+      + '<span class="mono">'+A[fr.r]+'</span> is the largest partner left, so nothing pairs with '
+      + '<span class="mono">'+A[fr.l]+'</span> here. Move <b>left</b> right.';
+  } else if (fr.act==='high'){
+    cls='high';
+    t = '<span class="mono">'+A[fr.i]+' + '+A[fr.l]+' + '+A[fr.r]+' = '+fr.sum+'</span>, above zero. '
+      + 'Move <b>right</b> left.';
+  } else if (fr.act==='hit'){
+    cls = fr.dup ? 'bad' : 'hit';
+    t = (fr.dup ? '<b>Duplicate emitted.</b> ' : '<b>Triplet found:</b> ')
+      + '<span class="mono">['+A[fr.i]+', '+A[fr.l]+', '+A[fr.r]+']</span>. Move <b>both</b> pointers — '
+      + 'each endpoint\'s partner is now used up.';
+  } else if (fr.act==='skipLeft'){
+    cls='skip';
+    t = '<b>Guard 2 fires.</b> <span class="mono">'+A[fr.l]+'</span> repeats the previous left value, '
+      + 'which would force the same right value and rebuild the same triplet. Skip past it.';
+  } else {
+    cls='skip';
+    t = '<b>Guard 3 fires.</b> <span class="mono">'+A[fr.r]+'</span> repeats the previous right value. Skip past it.';
+  }
+  var el = document.getElementById('main-say');
+  el.className = 'say ' + cls;
+  el.innerHTML = t;
+  mCount.textContent = 'step ' + (mainIdx+1) + ' / ' + mainState.frames.length;
+  mPrev.disabled = mainIdx === 0;
+  mNext.disabled = mainIdx === mainState.frames.length - 1;
+}
+function mainStop(){ if (mainTimer){ clearInterval(mainTimer); mainTimer=null; } mPlay.textContent='Play'; }
+function mainGo(d){ mainStop(); mainIdx = Math.min(mainState.frames.length-1, Math.max(0, mainIdx+d)); mainDraw(); }
+mPrev.onclick=function(){ mainGo(-1); };
+mNext.onclick=function(){ mainGo(1); };
+mReset.onclick=function(){ mainStop(); mainIdx=0; mainDraw(); };
+mPlay.onclick=function(){
+  if (mainTimer){ mainStop(); return; }
+  if (mainIdx === mainState.frames.length-1) mainIdx = 0;
+  mPlay.textContent='Pause';
+  mainTimer = setInterval(function(){
+    if (mainIdx >= mainState.frames.length-1){ mainStop(); mainDraw(); return; }
+    mainIdx++; mainDraw();
+  }, reduce ? 1500 : 1000);
+  mainDraw();
+};
+function mainLoad(arr){
+  mainStop();
+  mainState = run3Sum(arr);
+  mainIdx = 0;
+  document.getElementById('main-src').textContent = 'sorted: [' + mainState.sorted.join(', ') + ']';
+  if (!mainState.frames.length){
+    document.getElementById('main-tape').innerHTML = tape(mainState.sorted, {});
+    document.getElementById('main-bag').innerHTML = '<span class="lbl">Collected: nothing</span>';
+    var e = document.getElementById('main-say');
+    e.className='say'; e.innerHTML='No anchors to run — the array is too short or the break fires immediately.';
+    mCount.textContent = 'no steps'; mPrev.disabled = mNext.disabled = true;
+    return;
+  }
+  mainDraw();
+}
+document.getElementById('main-run').onclick = function(){
+  var res = parseArr(document.getElementById('main-input').value);
+  var err = document.getElementById('main-err');
+  if (res.err){ err.textContent = res.err; err.hidden = false; return; }
+  err.hidden = true;
+  mainLoad(res.arr);
+};
+document.getElementById('main-input').addEventListener('input', function(){
+  document.getElementById('main-err').hidden = true;
+});
+document.getElementById('main-input').addEventListener('keydown', function(e){
+  if (e.key === 'Enter'){ e.preventDefault(); document.getElementById('main-run').click(); }
+});
+mainLoad([-1,0,1,2,-1,-4]);
+
+/* ───────── 03 dedup lab ───────── */
+var GUARDS = [
+  ['anchorDD','Guard 1 — anchor','<code>nums[i] == nums[i-1]</code>','skip a repeated anchor'],
+  ['leftDD','Guard 2 — left','<code>nums[left] == nums[left-1]</code>','skip a repeated left value'],
+  ['rightDD','Guard 3 — right','<code>nums[right] == nums[right+1]</code>','skip a repeated right value']
+];
+var labOn = {anchorDD:true, leftDD:true, rightDD:true};
+var togs = '';
+GUARDS.forEach(function(g){
+  togs += '<label class="tog" data-tog="'+g[0]+'"><input type="checkbox" checked data-g="'+g[0]+'">'
+       +  '<span><b>'+g[1]+'</b><span class="sub">'+g[2]+'<br>'+g[3]+'</span></span></label>';
+});
+document.getElementById('lab-togs').innerHTML = togs;
+
+function labRun(){
+  var arr = document.getElementById('lab-array').value.split(',').map(Number);
+  var r = run3Sum(arr, labOn);
+  var emitted = r.result.map(function(t){ return t.join(','); });
+  var truth = brute3(arr);
+  document.getElementById('lab-src').textContent = 'sorted: [' + r.sorted.join(', ') + ']';
+  bag(document.getElementById('lab-out'), emitted, '');
+  bag(document.getElementById('lab-truth'), truth, '');
+  GUARDS.forEach(function(g){
+    document.querySelector('[data-tog="'+g[0]+'"]').classList.toggle('off', !labOn[g[0]]);
+  });
+  var uniq = emitted.filter(function(v,i){ return emitted.indexOf(v)===i; }).sort();
+  var dupCount = emitted.length - uniq.length;
+  var missing = truth.filter(function(t){ return uniq.indexOf(t)===-1; });
+  var v = document.getElementById('lab-verdict');
+  if (dupCount === 0 && missing.length === 0){
+    v.className = 'verdict ok';
+    v.innerHTML = '<b>Accepted.</b> Every correct triplet, each exactly once.'
+      + (labOn.anchorDD && (!labOn.leftDD || !labOn.rightDD)
+         ? ' Note this passes with only two guards — the anchor plus one pointer is enough, because any two values of a triplet determine the third.' : '');
+  } else {
+    v.className = 'verdict no';
+    v.innerHTML = '<b>Rejected.</b> '
+      + (dupCount ? dupCount + ' duplicate triplet' + (dupCount>1?'s':'') + ' emitted (shown in red). ' : '')
+      + (missing.length ? 'Missing: ' + missing.map(function(t){return '['+t+']';}).join(' ') + '. ' : '')
+      + 'The judge compares against the unique set.';
+  }
+}
+document.getElementById('lab-togs').addEventListener('change', function(e){
+  if (e.target.dataset.g){ labOn[e.target.dataset.g] = e.target.checked; labRun(); }
+});
+document.getElementById('lab-array').addEventListener('change', labRun);
+labRun();
+
+/* ───────── 05 work triangle ───────── */
+var N = 10, tri = '';
+for (var a=0;a<N-2;a++){
+  var len = N-1-a;
+  tri += '<div class="tri-row"><span class="lb">anchor '+a+'</span>'
+      +  '<span class="tri-bar" style="width:'+(len*17)+'px"></span>'
+      +  '<span class="n">'+len+'</span></div>';
+}
+document.getElementById('tri').innerHTML = tri;
+})();
+</script>
+
+</body></html>

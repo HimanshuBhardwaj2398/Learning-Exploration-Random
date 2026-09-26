@@ -1,0 +1,438 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Two-Pointer Elimination</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f2f5f4; --surface:#ffffff; --ink:#1b252e; --muted:#5a6771; --line:#d5dce0;
+  --wall:#35424d; --water:#2c7ca3; --water-soft:rgba(44,124,163,.20);
+  --short:#b8700c; --short-soft:rgba(184,112,12,.14);
+  --elim:#e6eaec; --elim-ink:#a3aeb5; --best:#1d8657; --best-soft:rgba(29,134,87,.20);
+  --code-bg:#e9eef0;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0f1519; --surface:#161e24; --ink:#e2e8ec; --muted:#96a3ac; --line:#2a353e;
+    --wall:#b8c4cd; --water:#5aaed3; --water-soft:rgba(90,174,211,.24);
+    --short:#eaa645; --short-soft:rgba(234,166,69,.16);
+    --elim:#1d262d; --elim-ink:#4f5d67; --best:#4cc38a; --best-soft:rgba(76,195,138,.22);
+    --code-bg:#1c252c;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1519; --surface:#161e24; --ink:#e2e8ec; --muted:#96a3ac; --line:#2a353e;
+  --wall:#b8c4cd; --water:#5aaed3; --water-soft:rgba(90,174,211,.24);
+  --short:#eaa645; --short-soft:rgba(234,166,69,.16);
+  --elim:#1d262d; --elim-ink:#4f5d67; --best:#4cc38a; --best-soft:rgba(76,195,138,.22);
+  --code-bg:#1c252c;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4.4vw,40px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700;margin-bottom:10px}
+h3{font-size:18px;font-weight:600}
+p{margin:0}
+.lede{max-width:68ch;color:var(--muted);margin-top:10px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--water)}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
+header{display:grid;gap:4px;margin-bottom:22px}
+
+/* lab */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:16px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.btns,.presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:500 14px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--water)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+button.primary{background:var(--water);border-color:var(--water);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+.chip{font-family:var(--mono);font-size:12.5px;padding:5px 10px}
+.chip[aria-pressed="true"]{border-color:var(--water);color:var(--water)}
+.input-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.input-row label{font-size:13px;color:var(--muted)}
+.input-row input{font:14px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:min(300px,100%)}
+.err{color:#c0392b;font-size:13px}
+.panes{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+@media (max-width:820px){.panes{grid-template-columns:1fr}}
+figure{margin:0;display:grid;gap:8px;align-content:start}
+figcaption{font-size:13px;color:var(--muted)}
+figcaption b{color:var(--ink);font-weight:600}
+svg{width:100%;height:auto;display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);padding:10px 12px;display:grid;gap:2px}
+.stat .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stat .v{font:500 22px var(--mono);font-variant-numeric:tabular-nums}
+.explain{border-left:3px solid var(--short);background:var(--short-soft);padding:12px 14px;border-radius:0 8px 8px 0;display:grid;gap:6px;min-height:96px}
+.explain.done{border-left-color:var(--best);background:var(--best-soft)}
+.explain .step{font:12px var(--mono);color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);display:inline-block}
+
+/* svg classes */
+.grid{stroke:var(--line);stroke-width:1}
+.bar{fill:var(--wall);opacity:.28;transition:opacity .2s}
+.bar.act{opacity:1}
+.bar.short{fill:var(--short);opacity:1}
+.bar.gone{opacity:.12}
+.bar.bst{fill:var(--best);opacity:1}
+.water{fill:var(--water-soft);stroke:var(--water);stroke-width:1.5;stroke-dasharray:4 3}
+.water.bst{fill:var(--best-soft);stroke:var(--best)}
+.t-val{font:500 12px var(--mono);fill:var(--muted);text-anchor:middle}
+.t-idx{font:12px var(--mono);fill:var(--muted);text-anchor:middle}
+.t-ptr{font:600 13px var(--mono);text-anchor:middle;fill:var(--water)}
+.t-ptr.short{fill:var(--short)}
+.t-water{font:500 13px var(--mono);fill:var(--water);text-anchor:middle}
+.t-water.bst{fill:var(--best)}
+.cell{fill:var(--surface);stroke:var(--line);stroke-width:1}
+.cell.chk{fill:var(--water-soft);stroke:var(--water)}
+.cell.elr{fill:url(#hatchA);stroke:var(--line)}
+.cell.elc{fill:url(#hatchB);stroke:var(--line)}
+.cell.pv{stroke:var(--short);stroke-width:2;stroke-dasharray:3 2}
+.cell.cur{stroke:var(--water);stroke-width:2.6}
+.cell.bst{fill:var(--best-soft);stroke:var(--best);stroke-width:2.6}
+.hbg{fill:var(--elim)} .hl{stroke:var(--elim-ink);stroke-width:1.3}
+.t-cell{font:500 10.5px var(--mono);fill:var(--ink);text-anchor:middle}
+.t-ax{font:11.5px var(--mono);fill:var(--muted)}
+.t-ax.on{fill:var(--water);font-weight:600}
+.t-ax.short{fill:var(--short);font-weight:600}
+.t-axt{font:11px var(--body);fill:var(--muted)}
+
+/* reading sections */
+.read{display:grid;gap:36px;margin-top:40px}
+.read section{display:grid;gap:12px}
+.read section > p{max-width:70ch}
+.proof{font-family:var(--mono);font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;line-height:1.9;overflow-x:auto}
+.proof .hl2{color:var(--short);font-weight:500}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;white-space:nowrap}
+.tag{font:500 11px var(--mono);padding:2px 7px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.tag.el{color:var(--water)} .tag.mi{color:var(--short)} .tag.no{color:#c0392b}
+pre{margin:0;background:var(--code-bg);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono)}
+pre code{background:none;padding:0}
+.qs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.q{border-top:2px solid var(--water);padding-top:10px;display:grid;gap:4px}
+.q h3{font-size:16px}
+.q p{font-size:14px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern study · two pointers</span>
+    <h1>Why two pointers work: every step deletes a whole row of pairs</h1>
+    <p class="lede">Container With Most Water asks you to pick the best pair <code>(i, j)</code> out of n(n−1)/2 candidates. Brute force checks every cell of that pair grid. Two pointers checks one cell, proves a whole row or column can't win, and throws it away. Step through it and watch the right-hand grid get cleared.</p>
+  </header>
+
+  <div class="lab" id="lab">
+    <div class="controls">
+      <div class="btns">
+        <button id="reset" type="button">Reset</button>
+        <button id="prev" type="button">← Back</button>
+        <button id="next" type="button" class="primary">Next step →</button>
+        <button id="play" type="button">Play</button>
+      </div>
+      <div class="presets" role="group" aria-label="Example inputs">
+        <button class="chip" type="button" data-p="1,8,6,2,5,4,8,3,7">Classic</button>
+        <button class="chip" type="button" data-p="1,2,9,9,2,1">Tall middle</button>
+        <button class="chip" type="button" data-p="4,3,2,1,4">Equal walls</button>
+      </div>
+    </div>
+    <form class="input-row" id="form">
+      <label for="heights">Heights (2–14 values, 0–99)</label>
+      <input id="heights" autocomplete="off" spellcheck="false">
+      <button type="submit">Run</button>
+      <span class="err" id="err" hidden></span>
+    </form>
+
+    <div class="stats" aria-live="polite">
+      <div class="stat"><span class="k">Pairs computed</span><span class="v" id="sChk">0</span></div>
+      <div class="stat"><span class="k">Pairs eliminated</span><span class="v" id="sEl">0</span></div>
+      <div class="stat"><span class="k">Still unknown</span><span class="v" id="sUn">0</span></div>
+      <div class="stat"><span class="k">Best area</span><span class="v" id="sBest">0</span></div>
+    </div>
+
+    <div class="panes">
+      <figure>
+        <svg id="bars" role="img" aria-label="Bar chart of wall heights with water between the two pointers"></svg>
+        <figcaption><b>The walls.</b> Dashed blue = water held by the current pair. Amber = the shorter wall, the one that moves next.</figcaption>
+      </figure>
+      <figure>
+        <svg id="matrix" role="img" aria-label="Grid of all pairs i less than j, showing which are computed or eliminated"></svg>
+        <figcaption><b>The search space.</b> Row = left index <span class="mono">i</span>, column = right index <span class="mono">j</span>. Brute force fills every cell; two pointers starts in the top-right corner and peels off one row or column per step.</figcaption>
+      </figure>
+    </div>
+
+    <div class="explain" id="explain"></div>
+
+    <div class="legend">
+      <span><i class="sw" style="background:var(--water-soft);border-color:var(--water)"></i>computed (area shown)</span>
+      <span><i class="sw" style="border:2px dashed var(--short)"></i>about to be eliminated</span>
+      <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" class="cell elr"/></svg>eliminated without computing</span>
+      <span><i class="sw" style="background:var(--best-soft);border-color:var(--best)"></i>best pair</span>
+    </div>
+  </div>
+
+  <div class="read">
+    <section>
+      <span class="eyebrow">The one-line proof</span>
+      <h2>Why moving the shorter wall is safe</h2>
+      <p>Say the left wall is the shorter one, <code>h[L] ≤ h[R]</code>. Keep L fixed and imagine every other partner <code>j</code> between the pointers:</p>
+      <div class="proof">
+        area(L, j) = min(h[L], h[j]) × (j − L)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≤ <span class="hl2">h[L]</span> × (j − L) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← height can never exceed the short wall<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≤ <span class="hl2">h[L]</span> × (R − L) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← and the width only shrinks<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= area(L, R) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← which you just measured
+      </div>
+      <p>So every pair left in row L is no better than a number you already hold. The short wall has nothing left to offer, and you drop it. Moving the <em>taller</em> wall would be a mistake: the new container is narrower and still capped by the same short wall, so you'd throw away pairs you haven't proven anything about.</p>
+      <p>That's the whole trick. Each step spends one comparison to discard up to <code>R − L − 1</code> pairs, and after n − 1 steps the grid is empty. You've covered all n(n−1)/2 pairs while computing only n − 1 of them, so it runs in O(n) time and O(1) space.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">Spotting the pattern</span>
+      <h2>Three questions that point to two pointers</h2>
+      <div class="qs">
+        <div class="q"><h3>Is the answer a pair or a window?</h3><p>The search space is (i, j) with i &lt; j over a line of elements, which is the upper triangle you see above.</p></div>
+        <div class="q"><h3>Does looking at the two ends settle one of them?</h3><p>Sorted order, or a quantity that only moves one way (width always shrinks inward), lets one comparison rule out an end for good.</p></div>
+        <div class="q"><h3>Can you start at a corner?</h3><p>Starting at (0, n−1) means each comparison has exactly two moves, and one of them is provably safe. If neither move is provably safe, the pattern doesn't apply.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">The family</span>
+      <h2>Same grid, different reason for deleting a row</h2>
+      <p>Most two-pointer problems follow the elimination logic above. A few just walk inward from both ends because the property is defined by mirrored positions. It helps to know which kind you're looking at.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Problem</th><th>Kind</th><th>What one comparison proves</th><th>Move</th></tr></thead>
+          <tbody>
+            <tr><td>Container With Most Water</td><td><span class="tag el">elimination</span></td><td>The shorter wall caps every narrower container that keeps it, so its row or column can't beat the current area.</td><td>Shorter side inward</td></tr>
+            <tr><td>Two Sum II (sorted)</td><td><span class="tag el">elimination</span></td><td>If <code>a[L] + a[R] &lt; target</code>, then a[L] plus anything smaller than a[R] is also too small, so row L is gone. If the sum is too big, column R is gone.</td><td>L++ if too small, R-- if too big</td></tr>
+            <tr><td>3Sum</td><td><span class="tag el">elimination</span></td><td>Fix <code>i</code>, then run Two Sum II on the rest. That's n inner O(n) sweeps, so O(n²). Sorting is what allows the elimination.</td><td>Same as Two Sum II</td></tr>
+            <tr><td>Trapping Rain Water</td><td><span class="tag el">elimination</span></td><td>Water above a bar is capped by the smaller of the max-left and max-right. The side with the smaller running max already knows its answer.</td><td>Settle the side with the smaller max</td></tr>
+            <tr><td>Valid Palindrome</td><td><span class="tag mi">mirror walk</span></td><td>Nothing gets eliminated. The definition compares position k with position n−1−k, so the pointers just follow it inward.</td><td>Both inward (skip non-alnum)</td></tr>
+            <tr><td>Two Sum (unsorted)</td><td><span class="tag no">doesn't fit</span></td><td><code>a[L] + a[R] &lt; target</code> says nothing about a[L] with any other partner, because the values aren't ordered. Use a hashmap instead.</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The last row is the real test. Two pointers is not about two indices. It's about having a monotone structure that lets one comparison discard a whole row or column. Without that structure, like in unsorted Two Sum, you fall back to a hashmap. The same staircase walk over a grid shows up in <em>Search a 2D Matrix II</em>, where the grid is literal instead of implied.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">The code</span>
+      <h2>What the walkthrough runs</h2>
+<pre><code>def maxArea(height: list[int]) -&gt; int:
+    L, R = 0, len(height) - 1
+    best = 0
+    while L &lt; R:
+        best = max(best, min(height[L], height[R]) * (R - L))
+        if height[L] &lt; height[R]:
+            L += 1      # row L can't beat what we just measured
+        else:
+            R -= 1      # column R can't either (ties: either side is safe)
+    return best</code></pre>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  let h = [1,8,6,2,5,4,8,3,7];
+  let steps = [], k = 0, timer = null;
+
+  function build(h){
+    const n = h.length, out = [];
+    const status = Array.from({length:n}, () => Array(n).fill(0));
+    let L = 0, R = n - 1, best = 0, bp = null;
+    while (L < R){
+      const area = Math.min(h[L], h[R]) * (R - L);
+      status[L][R] = 1;
+      const improved = bp === null || area > best;
+      if (improved){ best = area; bp = [L, R]; }
+      const moveLeft = h[L] < h[R];
+      out.push({L, R, area, best, bp: bp.slice(), improved, moveLeft, tie: h[L] === h[R], status: status.map(r => r.slice())});
+      if (moveLeft){ for (let j = L + 1; j < R; j++) status[L][j] = 2; L++; }
+      else { for (let i = L + 1; i < R; i++) status[i][R] = 3; R--; }
+    }
+    out.push({done:true, best, bp: bp ? bp.slice() : null, status: status.map(r => r.slice())});
+    return out;
+  }
+
+  function counts(st, n){
+    let c = 0, e = 0, total = n * (n - 1) / 2;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++){
+      if (st[i][j] === 1) c++; else if (st[i][j] > 1) e++;
+    }
+    return {c, e, u: total - c - e, total};
+  }
+
+  function renderBars(s){
+    const n = h.length, W = 600, H = 290, padX = 16, top = 26, bot = 48;
+    const slot = (W - 2 * padX) / n, bw = Math.min(slot * 0.56, 36);
+    const maxV = Math.max(...h, 1);
+    const y = v => top + (H - top - bot) * (1 - v / maxV);
+    const cx = i => padX + slot * (i + 0.5);
+    const y0 = y(0);
+    let o = '';
+    for (let g = 0; g <= 4; g++){ const yy = y(maxV * g / 4); o += `<line class="grid" x1="${padX}" x2="${W - padX}" y1="${yy}" y2="${yy}"/>`; }
+    const pair = s.done ? s.bp : [s.L, s.R];
+    if (pair){
+      const [a, b] = pair, m = Math.min(h[a], h[b]), cls = s.done ? ' bst' : '';
+      const wy = y(m), wh = y0 - wy, ww = cx(b) - cx(a);
+      o += `<rect class="water${cls}" x="${cx(a)}" y="${wy}" width="${ww}" height="${Math.max(wh, 0)}"/>`;
+      if (wh >= 22 && ww >= 110) o += `<text class="t-water${cls}" x="${(cx(a) + cx(b)) / 2}" y="${wy + wh / 2 + 5}">${m} × ${b - a} = ${m * (b - a)}</text>`;
+    }
+    const mover = s.done ? -1 : (s.moveLeft ? s.L : s.R);
+    for (let i = 0; i < n; i++){
+      let cls = 'bar';
+      if (s.done){ if (pair && (i === pair[0] || i === pair[1])) cls += ' bst'; }
+      else {
+        if (i === s.L || i === s.R) cls += ' act';
+        if (i === mover) cls += ' short';
+        if (i < s.L || i > s.R) cls += ' gone';
+      }
+      const bh = Math.max(y0 - y(h[i]), 2);
+      o += `<rect class="${cls}" x="${cx(i) - bw / 2}" y="${y0 - bh}" width="${bw}" height="${bh}" rx="2"/>`;
+      o += `<text class="t-val" x="${cx(i)}" y="${y0 - bh - 6}">${h[i]}</text>`;
+      o += `<text class="t-idx" x="${cx(i)}" y="${y0 + 17}">${i}</text>`;
+      if (!s.done && (i === s.L || i === s.R)){
+        const lab = i === s.L ? 'L' : 'R';
+        o += `<text class="t-ptr${i === mover ? ' short' : ''}" x="${cx(i)}" y="${y0 + 37}">${lab}</text>`;
+      }
+    }
+    const svg = $('#bars');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = o;
+  }
+
+  function renderMatrix(s){
+    const n = h.length, c = 30, off = 30, size = off + n * c + 4;
+    let o = `<defs>
+      <pattern id="hatchA" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><rect width="6" height="6" class="hbg"/><line x1="0" y1="0" x2="0" y2="6" class="hl"/></pattern>
+      <pattern id="hatchB" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-45)"><rect width="6" height="6" class="hbg"/><line x1="0" y1="0" x2="0" y2="6" class="hl"/></pattern>
+    </defs>`;
+    const mover = s.done ? null : (s.moveLeft ? 'row' : 'col');
+    for (let i = 0; i < n; i++){
+      let rc = 't-ax';
+      if (!s.done && i === s.L) rc += mover === 'row' ? ' short' : ' on';
+      o += `<text class="${rc}" x="${off - 8}" y="${off + i * c + c / 2 + 4}" text-anchor="end">${i}</text>`;
+    }
+    for (let j = 0; j < n; j++){
+      let cc = 't-ax';
+      if (!s.done && j === s.R) cc += mover === 'col' ? ' short' : ' on';
+      o += `<text class="${cc}" x="${off + j * c + c / 2}" y="${off - 9}" text-anchor="middle">${j}</text>`;
+    }
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++){
+      const st = s.status[i][j];
+      let cls = 'cell' + (st === 1 ? ' chk' : st === 2 ? ' elr' : st === 3 ? ' elc' : '');
+      if (!s.done){
+        if (i === s.L && j === s.R) cls += ' cur';
+        else if (st === 0 && ((s.moveLeft && i === s.L && j > s.L && j < s.R) || (!s.moveLeft && j === s.R && i > s.L && i < s.R))) cls += ' pv';
+      } else if (s.bp && i === s.bp[0] && j === s.bp[1]) cls += ' bst';
+      const x = off + j * c, yy = off + i * c;
+      o += `<rect class="${cls}" x="${x + 1.5}" y="${yy + 1.5}" width="${c - 3}" height="${c - 3}" rx="3"/>`;
+      if (st === 1) o += `<text class="t-cell" x="${x + c / 2}" y="${yy + c / 2 + 4}">${Math.min(h[i], h[j]) * (j - i)}</text>`;
+    }
+    const svg = $('#matrix');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.style.maxWidth = Math.max(size * 1.15, 260) + 'px';
+    svg.innerHTML = o;
+  }
+
+  function renderExplain(s){
+    const box = $('#explain'), n = h.length, total = steps.length - 1;
+    if (s.done){
+      const ct = counts(s.status, n);
+      box.className = 'explain done';
+      box.innerHTML = `<span class="step">Done: pointers met</span>
+        <p><b>Best area = ${s.best}</b>${s.bp ? ` using walls ${s.bp[0]} and ${s.bp[1]}` : ''}. Only <b>${ct.c}</b> of ${ct.total} pairs were computed. The other <b>${ct.e}</b> were ruled out without ever being computed. No unknown cells remain, so the optimum couldn't have been skipped.</p>`;
+      return;
+    }
+    const {L, R, area, best, moveLeft, tie, improved} = s;
+    const gone = R - L - 1;
+    const sh = moveLeft ? h[L] : h[R];
+    let why;
+    if (tie){
+      why = `Both walls are ${h[L]}. Any container that keeps either wall is narrower and still capped at ${h[L]}, so it can't beat ${area}. Either side is safe to drop; the code moves <b>R</b>, which eliminates column ${R}${gone ? ` (${gone} pair${gone > 1 ? 's' : ''})` : ''}.`;
+    } else if (moveLeft){
+      why = `The left wall (${h[L]}) is shorter. Every pair that keeps L and pulls R inward is narrower and capped at height ≤ ${sh}, so none of <span class="mono">(${L}, ${L + 1})…(${L}, ${R - 1})</span> can beat ${area}. <b>Move L</b>, which eliminates row ${L}${gone ? `: ${gone} pair${gone > 1 ? 's' : ''} discarded with one comparison` : ''}.`;
+    } else {
+      why = `The right wall (${h[R]}) is shorter. Every pair that keeps R and pulls L inward is narrower and capped at height ≤ ${sh}, so none of <span class="mono">(${L + 1}, ${R})…(${R - 1}, ${R})</span> can beat ${area}. <b>Move R</b>, which eliminates column ${R}${gone ? `: ${gone} pair${gone > 1 ? 's' : ''} discarded with one comparison` : ''}.`;
+    }
+    if (!gone) why = why.replace(/so none of[^.]*\./, 'and there are no pairs left between them.');
+    box.className = 'explain';
+    box.innerHTML = `<span class="step">Step ${k + 1} of ${total} · L = ${L}, R = ${R}</span>
+      <p>Area = min(${h[L]}, ${h[R]}) × (${R} − ${L}) = <b>${area}</b>${improved ? ' → <b>new best</b>' : `, best so far ${best}`}.</p>
+      <p>${why}</p>`;
+  }
+
+  function render(){
+    const s = steps[k], n = h.length;
+    renderBars(s); renderMatrix(s); renderExplain(s);
+    const ct = counts(s.status, n);
+    $('#sChk').textContent = ct.c;
+    $('#sEl').textContent = ct.e;
+    $('#sUn').textContent = ct.u;
+    $('#sBest').textContent = s.best;
+    $('#prev').disabled = k === 0;
+    $('#next').disabled = k === steps.length - 1;
+    if (k === steps.length - 1) stop();
+  }
+
+  function stop(){ if (timer){ clearInterval(timer); timer = null; } $('#play').textContent = 'Play'; }
+  function play(){
+    if (timer){ stop(); return; }
+    if (k === steps.length - 1) k = 0;
+    $('#play').textContent = 'Pause';
+    render();
+    timer = setInterval(() => { if (k < steps.length - 1){ k++; render(); } else stop(); }, 1300);
+  }
+
+  function load(arr){
+    h = arr; steps = build(h); k = 0; stop();
+    $('#heights').value = h.join(', ');
+    document.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === h.join(',') ? 'true' : 'false'));
+    render();
+  }
+
+  $('#next').addEventListener('click', () => { stop(); if (k < steps.length - 1){ k++; render(); } });
+  $('#prev').addEventListener('click', () => { stop(); if (k > 0){ k--; render(); } });
+  $('#reset').addEventListener('click', () => { stop(); k = 0; render(); });
+  $('#play').addEventListener('click', play);
+  document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { $('#err').hidden = true; load(b.dataset.p.split(',').map(Number)); }));
+  $('#form').addEventListener('submit', e => {
+    e.preventDefault();
+    const raw = $('#heights').value.split(/[\s,]+/).filter(Boolean);
+    const arr = raw.map(Number);
+    const err = $('#err');
+    if (arr.length < 2 || arr.length > 14 || arr.some(v => !Number.isInteger(v) || v < 0 || v > 99)){
+      err.textContent = 'Enter 2 to 14 whole numbers between 0 and 99, separated by commas or spaces.';
+      err.hidden = false; return;
+    }
+    err.hidden = true; load(arr);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight'){ $('#next').click(); }
+    else if (e.key === 'ArrowLeft'){ $('#prev').click(); }
+  });
+
+  load(h);
+})();
+</script>
+
+</body></html>

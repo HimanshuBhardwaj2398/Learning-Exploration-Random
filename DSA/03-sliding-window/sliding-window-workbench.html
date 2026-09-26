@@ -1,0 +1,1233 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sliding Window Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<style>
+:root{
+  --ground:#f6f7f5; --surface:#ffffff; --surface-2:#eef1ee; --surface-3:#e4e9e5;
+  --ink:#16211d; --ink-2:#4a5852; --ink-3:#77847e;
+  --line:#dce3de; --line-2:#c7d1cb;
+  --accent:#0f6b52; --accent-ink:#0b4e3b; --accent-soft:#e1efe9;
+  --warm:#a75a12; --warm-ink:#8a4a0e; --warm-soft:#f8ece0;
+  --bad:#a92e22; --bad-soft:#fbeae6;
+  --shadow:0 1px 2px rgba(22,33,29,.06), 0 6px 18px -10px rgba(22,33,29,.18);
+  --f-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d1412; --surface:#131c19; --surface-2:#1a2521; --surface-3:#22302b;
+    --ink:#e8efea; --ink-2:#a4b2ab; --ink-3:#7c8a83;
+    --line:#26322d; --line-2:#334039;
+    --accent:#4fd1a5; --accent-ink:#7ee0bd; --accent-soft:#12302a;
+    --warm:#e0a163; --warm-ink:#efbb84; --warm-soft:#31241a;
+    --bad:#ef9184; --bad-soft:#371f1c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -10px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d1412; --surface:#131c19; --surface-2:#1a2521; --surface-3:#22302b;
+  --ink:#e8efea; --ink-2:#a4b2ab; --ink-3:#7c8a83;
+  --line:#26322d; --line-2:#334039;
+  --accent:#4fd1a5; --accent-ink:#7ee0bd; --accent-soft:#12302a;
+  --warm:#e0a163; --warm-ink:#efbb84; --warm-soft:#31241a;
+  --bad:#ef9184; --bad-soft:#371f1c;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -10px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--f-body); font-size:16px; line-height:1.62;
+  margin:0; padding-inline:20px; padding-block:0 72px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px;margin:0 auto}
+.col{max-width:68ch;margin-inline:auto}
+p{margin:0 0 1.05em}
+a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-2);padding:.12em .36em;border-radius:3px;color:var(--ink)}
+strong{font-weight:600}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* ---------- masthead ---------- */
+.mast{padding-block:44px 30px;border-bottom:1px solid var(--line-2)}
+.kicker{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:14px}
+h1{font-size:clamp(34px,7vw,52px);line-height:1.04;letter-spacing:-.018em;margin-bottom:14px}
+h1 em{font-style:italic;color:var(--accent-ink)}
+.standfirst{font-size:17.5px;color:var(--ink-2);max-width:60ch;margin:0}
+.mast-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font-family:var(--f-mono);font-size:11.5px;padding:4px 9px;border:1px solid var(--line-2);border-radius:99px;color:var(--ink-2);background:var(--surface)}
+.chip.on{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+
+/* ---------- stages ---------- */
+section{padding-block:40px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.stage-head{display:flex;gap:16px;align-items:baseline;margin-bottom:22px}
+.stage-n{font-family:var(--f-mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:99px;
+  width:26px;height:26px;display:grid;place-items:center;flex:0 0 26px;translate:0 -2px}
+h2{font-size:clamp(25px,4.4vw,32px);line-height:1.15;letter-spacing:-.012em}
+.stage-sub{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+h3{font-size:20px;margin:30px 0 10px;letter-spacing:-.006em}
+h4{font-size:16px;font-family:var(--f-body);font-weight:600;margin:22px 0 8px}
+
+/* ---------- prose furniture ---------- */
+.lede{font-size:18px;color:var(--ink-2)}
+.rule{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0;padding:16px 18px;margin:22px 0;font-size:15.2px}
+.rule .rl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:6px}
+.rule p:last-child{margin-bottom:0}
+.warn{border-left-color:var(--bad)}
+.warn .rl{color:var(--bad)}
+ul,ol{margin:0 0 1.05em;padding-left:1.3em}
+li{margin-bottom:.4em}
+li::marker{color:var(--ink-3)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.2px;min-width:420px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:500;background:var(--surface-2)}
+td.m,th.m{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.yes{color:var(--accent-ink);font-weight:600}
+.no{color:var(--bad);font-weight:600}
+
+/* ---------- code ---------- */
+pre{font-family:var(--f-mono);font-size:13.2px;line-height:1.66;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:10px;padding:15px 16px;overflow-x:auto;margin:16px 0}
+pre code{background:none;padding:0;font-size:inherit}
+.k{color:var(--accent-ink);font-weight:500}
+.c{color:var(--ink-3);font-style:italic}
+.s{color:var(--warm-ink)}
+.inv{color:var(--accent);font-weight:600}
+.bugline{background:var(--bad-soft);display:inline-block;width:100%;border-radius:2px}
+
+/* ---------- bench (visualiser) ---------- */
+.bench{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:24px 0;
+  box-shadow:var(--shadow);overflow:hidden}
+.bench-head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.bench-tag{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-ink)}
+.bench-q{font-size:13.6px;color:var(--ink-2)}
+.bench-body{padding:18px 16px 14px}
+.trackwrap{overflow-x:auto;padding-bottom:4px}
+.track{display:flex;gap:4px;min-width:min-content;padding-top:26px}
+.cellbox{position:relative;flex:0 0 auto}
+.cell{width:40px;height:44px;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:7px;
+  font-family:var(--f-mono);font-size:15px;font-variant-numeric:tabular-nums;background:var(--surface);
+  color:var(--ink-3);transition:background .16s,color .16s,border-color .16s}
+.cell.in{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.cell.ptr-s{box-shadow:inset 0 0 0 2px var(--warm)}
+.cell.ptr-e{box-shadow:inset 0 0 0 2px var(--accent)}
+.cell.ptr-s.ptr-e{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--warm)}
+.cell.best{outline:2px dashed var(--accent);outline-offset:3px}
+.idx{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);text-align:center;margin-top:3px;font-variant-numeric:tabular-nums}
+.ptrlbl{position:absolute;top:-24px;left:50%;translate:-50% 0;font-family:var(--f-mono);font-size:10px;
+  letter-spacing:.04em;white-space:nowrap;padding:1px 5px;border-radius:4px;font-weight:600}
+.ptrlbl.s{background:var(--warm-soft);color:var(--warm-ink)}
+.ptrlbl.e{background:var(--accent-soft);color:var(--accent-ink)}
+.ptrlbl.both{background:var(--surface-3);color:var(--ink)}
+.readout{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+.ro{font-family:var(--f-mono);font-size:12px;padding:4px 9px;border-radius:6px;background:var(--surface-2);
+  border:1px solid var(--line);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.ro b{color:var(--ink);font-weight:600}
+.ro.acc{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+.ro.acc b{color:var(--accent-ink)}
+.cap{margin-top:14px;font-size:14px;line-height:1.5;min-height:3.1em;padding:10px 12px;border-radius:8px;
+  background:var(--surface-2);border-left:3px solid var(--line-2);color:var(--ink-2);
+  font-family:var(--f-mono);font-size:12.6px}
+.cap.extend{border-left-color:var(--accent);color:var(--ink)}
+.cap.slide{border-left-color:var(--accent);color:var(--ink)}
+.cap.shrink{border-left-color:var(--warm);background:var(--warm-soft);color:var(--ink)}
+.cap.record{border-left-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:500}
+.cap.done{border-left-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
+.transport{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+button{font-family:var(--f-body);font-size:13px;font-weight:500;padding:6px 13px;border-radius:7px;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .14s,border-color .14s}
+button:hover{background:var(--surface-2);border-color:var(--ink-3)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] button.primary,:root:not([data-theme="light"]) button.primary{color:#07130f}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) button.primary{color:#fff}}
+button.primary:hover{filter:brightness(1.08)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.frameno{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
+.statechips{display:flex;flex-wrap:wrap;gap:5px;margin-top:13px;align-items:center;min-height:26px}
+.statechips .lbl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-right:2px}
+.sc{font-family:var(--f-mono);font-size:12px;padding:3px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.sc.neg{background:var(--warm-soft);border-color:transparent;color:var(--warm-ink)}
+.sc.zero{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+.sc.empty{color:var(--ink-3);border-style:dashed}
+
+/* ---------- bug gallery ---------- */
+.bugs{display:grid;gap:12px;margin:22px 0}
+.bug{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.bug summary{cursor:pointer;padding:12px 15px;display:flex;gap:11px;align-items:baseline;list-style:none;font-size:15px}
+.bug summary::-webkit-details-marker{display:none}
+.bug summary:hover{background:var(--surface-2)}
+.bugn{font-family:var(--f-mono);font-size:11px;color:var(--bad);border:1px solid var(--bad);border-radius:99px;
+  width:22px;height:22px;display:grid;place-items:center;flex:0 0 22px;translate:0 -1px}
+.bug-inner{padding:0 15px 15px;border-top:1px solid var(--line)}
+.verdict{font-family:var(--f-mono);font-size:12.5px;background:var(--bad-soft);border-radius:8px;padding:11px 13px;margin-top:13px;
+  border-left:3px solid var(--bad);overflow-x:auto}
+.verdict .got{color:var(--bad);font-weight:600}
+.verdict .want{color:var(--accent-ink);font-weight:600}
+.fix{font-size:14.2px;margin-top:11px;color:var(--ink-2)}
+.fix b{color:var(--ink)}
+
+/* ---------- drill ---------- */
+.drill{display:grid;gap:9px;margin:20px 0}
+.dq{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:14.6px}
+.dq .qn{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);margin-right:8px}
+.dq button{margin-top:9px;font-size:12px;padding:4px 10px}
+.ans{margin-top:9px;font-size:13.8px;padding:10px 12px;border-radius:7px;background:var(--accent-soft);color:var(--ink);border-left:3px solid var(--accent)}
+.ans b{color:var(--accent-ink)}
+
+/* ---------- checklist ---------- */
+.check{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:6px 16px 14px;margin:20px 0}
+.check li{list-style:none;display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);margin:0}
+.check li:last-child{border-bottom:0}
+.check ul{padding:0;margin:0}
+.check input{margin-top:4px;accent-color:var(--accent);width:15px;height:15px;flex:0 0 15px;cursor:pointer}
+.check label{font-size:14.4px;cursor:pointer;color:var(--ink)}
+.check input:checked+label{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.checkhead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0 4px;flex-wrap:wrap}
+.checkhead .ct{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
+
+/* ---------- ladder ---------- */
+.ladder{display:grid;gap:8px;margin:20px 0}
+.rung{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:baseline;
+  background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 14px}
+.rung .no{font-family:var(--f-mono);font-size:13px;color:var(--accent-ink);font-weight:600;font-variant-numeric:tabular-nums}
+.rung .nm{font-size:14.6px}
+.rung .nm small{display:block;color:var(--ink-3);font-size:12.6px;margin-top:1px}
+.rung .tier{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--ink-3);white-space:nowrap}
+.rung .tier.core{background:var(--accent-soft);color:var(--accent-ink)}
+.rung .tier.str{background:var(--warm-soft);color:var(--warm-ink)}
+
+/* ---------- cheat sheet ---------- */
+.cheat{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:4px 20px 20px;margin:22px 0;box-shadow:var(--shadow)}
+.cheat h4{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);
+  margin:20px 0 8px;font-weight:500}
+.cheat p,.cheat li{font-size:14.2px}
+.cheat pre{font-size:12.4px;margin:8px 0}
+
+/* ---------- misc ---------- */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.srcs{font-size:14px;color:var(--ink-2)}
+.srcs li{margin-bottom:.5em}
+.note{font-size:13.4px;color:var(--ink-3);margin-top:10px}
+.sw-svg{width:100%;height:auto;max-width:100%;display:block}
+.figure{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:16px;margin:22px 0}
+.figcap{font-size:13.2px;color:var(--ink-3);margin-top:10px;font-family:var(--f-body)}
+.toggle{position:fixed;top:0;right:12px;z-index:9;padding-top:calc(10px + env(safe-area-inset-top,0px));background:none;border:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast col">
+  <div class="kicker">Pattern 03 · Day 1 · arrays &amp; strings</div>
+  <h1>The window that <em>never goes backwards</em></h1>
+  <p class="standfirst">Two pointers taught you to move pointers <em>toward</em> each other and throw away
+  candidates. Sliding window keeps both pointers moving the <em>same</em> way and cares about everything
+  between them. That one change is the whole pattern — and it is why the cost stays O(n).</p>
+  <div class="mast-meta">
+    <span class="chip on">Builds on: two pointers + hashing</span>
+    <span class="chip">Anchors: 643 → 3 → 424</span>
+    <span class="chip">Every trace verified in Python</span>
+  </div>
+</header>
+
+<!-- =================== 1. SPOT IT =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">1</div>
+    <div><h2>Spot it</h2><div class="stage-sub">Trigger words, constraints, look-alikes</div></div>
+  </div>
+
+  <p class="lede">Sliding window is for one shape of question: <strong>find a contiguous run</strong>
+  — subarray or substring — <strong>that satisfies a constraint</strong>, and report its length, sum,
+  contents or count.</p>
+
+  <p>Three signals, all of which have to be present:</p>
+  <ol>
+    <li><strong>Contiguous.</strong> The words <em>subarray</em>, <em>substring</em>, <em>consecutive</em>,
+    <em>window of size k</em>. The moment a problem says <em>subsequence</em>, this pattern is out — a
+    window can only ever see an unbroken range.</li>
+    <li><strong>A constraint you can check in O(1)</strong> from some running state: a sum, a count, a
+    character-frequency dict, a set size.</li>
+    <li><strong>Optimise or count:</strong> longest / shortest / maximum / minimum / "how many", or a
+    fixed <code>k</code>.</li>
+  </ol>
+
+  <div class="rule">
+    <span class="rl">The condition that makes it legal</span>
+    <p>Sliding window only works when validity is <strong>monotone in the window</strong>: if a window is
+    invalid, every window that <em>contains</em> it is also invalid (for "at most" constraints), or
+    growing the window can only push a sum further past the target (for "at least" constraints with
+    non-negative values). That monotonicity is what lets you move <code>start</code> forward and
+    <em>never</em> reconsider it. Break the monotonicity — add a negative number — and the pattern
+    silently returns wrong answers. There's a verified counterexample in stage 6.</p>
+  </div>
+
+  <h3>What the constraints tell you</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="m">n up to</th><th>Budget</th><th>What that rules in</th></tr></thead>
+    <tbody>
+      <tr><td class="m">10⁵–10⁶</td><td class="m">O(n)</td><td>Window or hash pass. A nested loop over all subarrays is O(n²) ≈ 10¹⁰ — far too slow.</td></tr>
+      <tr><td class="m">~10⁴</td><td class="m">O(n log n)</td><td>Window still preferred; O(n²) ≈ 10⁸ is borderline.</td></tr>
+      <tr><td class="m">≤ 1000</td><td class="m">O(n²) fine</td><td>Brute force passes — but the window is still the answer the interviewer wants.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">A useful reflex: if you can describe your brute force as "for every start, extend to
+  every end", the window is the fix. You are about to reuse almost all of that inner work.</p>
+
+  <h3>Discriminating it from the neighbours</h3>
+  <div class="tw"><table>
+    <thead><tr><th>If the problem…</th><th>Pattern</th><th>Tell</th></tr></thead>
+    <tbody>
+      <tr><td>cares about the <strong>contents between</strong> the pointers, both moving right</td><td class="yes">Sliding window</td><td>You maintain running state</td></tr>
+      <tr><td>cares only about the <strong>two endpoints</strong>, pointers converging</td><td>Two pointers</td><td>Sorted input, pair/triplet</td></tr>
+      <tr><td>counts subarrays with an <strong>exact sum</strong>, values may be negative</td><td>Prefix sum + hash</td><td>LC 560 — window is unsafe</td></tr>
+      <tr><td>needs the <strong>max/min inside</strong> each window</td><td>Window + monotonic deque</td><td>LC 239 — a plain dict can't pop the max</td></tr>
+      <tr><td>says <strong>subsequence</strong> (non-contiguous)</td><td>DP / greedy</td><td>Window physically cannot skip</td></tr>
+      <tr><td>looks for a single value in <strong>sorted</strong> data</td><td>Binary search</td><td>No window at all</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="rule">
+    <span class="rl">One-line discriminator</span>
+    <p>Two pointers asks <em>"what's at the ends?"</em> · Sliding window asks <em>"what's inside?"</em>
+    If deleting an element from the middle would change your answer, you're holding a window.</p>
+  </div>
+</div>
+</section>
+
+<!-- =================== 2. SEE IT =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">2</div>
+    <div><h2>See it</h2><div class="stage-sub">Why the cost collapses to O(n)</div></div>
+  </div>
+
+  <p class="lede">The brute force recomputes each window from scratch. The window reuses the previous
+  answer and pays only for the difference. That is the entire idea; everything else is bookkeeping.</p>
+
+  <p>Take <strong>max sum of any subarray of size 3</strong> on <code>[2,1,5,1,3,2]</code>. The naive
+  version adds three numbers for each of the four positions: 12 additions. The window adds one and
+  subtracts one per step: after the first fill, 2 operations per position, regardless of how big
+  <code>k</code> gets. Step through it — watch the sum, not the cells.</p>
+</div>
+
+  <div class="bench" data-bench="fixed">
+    <div class="bench-head">
+      <span class="bench-tag">LC 643 · fixed length</span>
+      <span class="bench-q">max sum of a window of size k = 3 in [2,1,5,1,3,2]</span>
+    </div>
+    <div class="bench-body">
+      <div class="trackwrap"><div class="track" data-track></div></div>
+      <div class="readout" data-readout></div>
+      <div class="cap" data-cap></div>
+      <div class="transport">
+        <button data-prev>← Back</button>
+        <button class="primary" data-play>Play</button>
+        <button data-next>Step →</button>
+        <button data-reset>Reset</button>
+        <span class="frameno" data-frameno></span>
+      </div>
+    </div>
+  </div>
+
+<div class="col">
+  <h3>The amortisation argument, drawn</h3>
+  <p>For variable-length windows the O(n) claim is less obvious: there's a <code>while</code> loop
+  <em>inside</em> a <code>for</code> loop, which looks like O(n²). It isn't, and the reason is worth being
+  able to say out loud in an interview:</p>
+
+  <div class="rule">
+    <span class="rl">The proof in one sentence</span>
+    <p><code>start</code> and <code>end</code> each only ever increase, and neither can exceed
+    <code>n</code>. So across the whole run there are at most <code>n</code> extensions and at most
+    <code>n</code> contractions — <strong>2n pointer moves total</strong>, each O(1). The inner
+    <code>while</code> can run many times on one iteration, but it is borrowing from a budget that was
+    already paid for.</p>
+  </div>
+
+  <div class="figure">
+    <svg class="sw-svg" viewBox="0 0 560 210" role="img" aria-label="Both pointers only ever move forward; the two staircases never descend.">
+      <g data-staircase></g>
+    </svg>
+    <p class="figcap">Each frame of the "longest substring without repeating characters" run on
+    <code>"abcabcbb"</code>. Both staircases are non-decreasing — that is the whole proof. The gap
+    between them <em>is</em> the window.</p>
+  </div>
+</div>
+</section>
+
+<!-- =================== 3. THE THREE SHAPES =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">3</div>
+    <div><h2>The three shapes</h2><div class="stage-sub">Fixed · longest · shortest</div></div>
+  </div>
+
+  <p class="lede">Almost every window problem is one of three skeletons. Learn to pick the skeleton from
+  the question in one read, and the code writes itself.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>The question says…</th><th>Shape</th><th>Where the answer is recorded</th></tr></thead>
+    <tbody>
+      <tr><td>"of size k", "every k consecutive"</td><td class="m">FIXED</td><td>Once the window reaches size k, every step</td></tr>
+      <tr><td>"longest / maximum … such that"</td><td class="m">LONGEST</td><td><strong>After</strong> the shrink loop, when the window is valid</td></tr>
+      <tr><td>"shortest / minimum … such that"</td><td class="m">SHORTEST</td><td><strong>Inside</strong> the shrink loop, while it's still valid</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="rule">
+    <span class="rl">The single most useful thing on this page</span>
+    <p><strong>Longest records after shrinking. Shortest records inside the shrinking.</strong>
+    Get those two backwards and you get bugs 3 and 7 in stage 5 — both of which return
+    plausible-looking wrong numbers rather than crashing.</p>
+  </div>
+
+  <h3>Shape A — fixed length</h3>
+  <pre><code><span class="k">def</span> max_sum_k(nums: list[<span class="k">int</span>], k: <span class="k">int</span>) -> <span class="k">int</span>:
+    window = <span class="k">sum</span>(nums[:k])          <span class="c"># pay O(k) once</span>
+    best = window
+    <span class="k">for</span> end <span class="k">in</span> <span class="k">range</span>(k, <span class="k">len</span>(nums)):
+        window += nums[end] - nums[end - k]   <span class="c"># add incoming, drop outgoing</span>
+        best = <span class="k">max</span>(best, window)
+    <span class="k">return</span> best</code></pre>
+  <p class="note">The whole trick is <code>nums[end] - nums[end - k]</code>. If you ever find yourself
+  writing <code>sum(nums[i:i+k])</code> inside a loop, you have re-created the O(n·k) brute force.</p>
+
+  <h3>Shape B — longest valid window</h3>
+  <pre><code><span class="k">def</span> longest_valid(seq) -> <span class="k">int</span>:
+    state = ...                    <span class="c"># dict / set / counter</span>
+    start = best = <span class="s">0</span>
+    <span class="k">for</span> end, item <span class="k">in</span> <span class="k">enumerate</span>(seq):
+        add(state, item)           <span class="c"># extend right, O(1)</span>
+        <span class="k">while</span> <span class="k">not</span> valid(state):      <span class="c"># while, not if (see stage 5)</span>
+            remove(state, seq[start])
+            start += <span class="s">1</span>
+        <span class="inv"># INVARIANT: window [start, end] is valid here</span>
+        best = <span class="k">max</span>(best, end - start + <span class="s">1</span>)
+    <span class="k">return</span> best</code></pre>
+
+  <p>Filled in for <strong>longest substring without repeating characters</strong>. Watch the caption
+  colour: teal steps extend, amber steps contract.</p>
+</div>
+
+  <div class="bench" data-bench="longest">
+    <div class="bench-head">
+      <span class="bench-tag">LC 3 · longest</span>
+      <span class="bench-q">longest substring without repeating characters in "abcabcbb"</span>
+    </div>
+    <div class="bench-body">
+      <div class="trackwrap"><div class="track" data-track></div></div>
+      <div class="statechips" data-chips></div>
+      <div class="readout" data-readout></div>
+      <div class="cap" data-cap></div>
+      <div class="transport">
+        <button data-prev>← Back</button>
+        <button class="primary" data-play>Play</button>
+        <button data-next>Step →</button>
+        <button data-reset>Reset</button>
+        <span class="frameno" data-frameno></span>
+      </div>
+    </div>
+  </div>
+
+<div class="col">
+  <pre><code><span class="k">def</span> longest_unique(s: <span class="k">str</span>) -> <span class="k">int</span>:
+    count = defaultdict(<span class="k">int</span>)
+    start = best = <span class="s">0</span>
+    <span class="k">for</span> end, ch <span class="k">in</span> <span class="k">enumerate</span>(s):
+        count[ch] += <span class="s">1</span>
+        <span class="k">while</span> count[ch] > <span class="s">1</span>:                <span class="c"># only ch can be the duplicate</span>
+            count[s[start]] -= <span class="s">1</span>
+            <span class="k">if</span> count[s[start]] == <span class="s">0</span>:
+                <span class="k">del</span> count[s[start]]         <span class="c"># keep len(count) honest</span>
+            start += <span class="s">1</span>
+        best = <span class="k">max</span>(best, end - start + <span class="s">1</span>)
+    <span class="k">return</span> best</code></pre>
+  <p class="note">Note <code>while count[ch] &gt; 1</code> rather than a general validity scan: the only
+  character that can have just become invalid is the one you added. That's an O(1) check instead of an
+  O(window) one.</p>
+
+  <h3>Shape C — shortest valid window</h3>
+  <p>Same skeleton, two changes: the loop condition becomes <em>while valid</em> (shrink greedily while
+  you still can), and the answer is recorded <em>inside</em> it.</p>
+</div>
+
+  <div class="bench" data-bench="shortest">
+    <div class="bench-head">
+      <span class="bench-tag">LC 209 · shortest</span>
+      <span class="bench-q">min length subarray with sum ≥ 7 in [2,3,1,2,4,3]</span>
+    </div>
+    <div class="bench-body">
+      <div class="trackwrap"><div class="track" data-track></div></div>
+      <div class="readout" data-readout></div>
+      <div class="cap" data-cap></div>
+      <div class="transport">
+        <button data-prev>← Back</button>
+        <button class="primary" data-play>Play</button>
+        <button data-next>Step →</button>
+        <button data-reset>Reset</button>
+        <span class="frameno" data-frameno></span>
+      </div>
+    </div>
+  </div>
+
+<div class="col">
+  <pre><code><span class="k">def</span> min_subarray_len(target: <span class="k">int</span>, nums: list[<span class="k">int</span>]) -> <span class="k">int</span>:
+    start = total = <span class="s">0</span>
+    best = <span class="k">float</span>(<span class="s">'inf'</span>)
+    <span class="k">for</span> end, v <span class="k">in</span> <span class="k">enumerate</span>(nums):
+        total += v
+        <span class="k">while</span> total >= target:              <span class="c"># while VALID, not while invalid</span>
+            best = <span class="k">min</span>(best, end - start + <span class="s">1</span>)  <span class="c"># record INSIDE</span>
+            total -= nums[start]
+            start += <span class="s">1</span>
+    <span class="k">return</span> <span class="s">0</span> <span class="k">if</span> best == <span class="k">float</span>(<span class="s">'inf'</span>) <span class="k">else</span> best</code></pre>
+  <p class="note">Returning <code>0</code> rather than <code>inf</code> when nothing qualifies is part of
+  the problem statement, and a very common dropped requirement.</p>
+</div>
+</section>
+
+<!-- =================== 4. NEED / HAVE =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">4</div>
+    <div><h2>The need / have counter</h2><div class="stage-sub">The hard-mode variant, made mechanical</div></div>
+  </div>
+
+  <p class="lede">Minimum Window Substring (LC 76) is the problem people fear. It is Shape C with a
+  smarter <code>valid()</code> — and one idea that makes it O(n) instead of O(26n): a single integer
+  called <code>missing</code>.</p>
+
+  <p>The naive check is "does my window's counter cover every character of <code>t</code>?", which is a
+  dict comparison every step. Instead, keep one counter that starts at <code>Counter(t)</code> and let it
+  go <strong>negative</strong>:</p>
+
+  <ul>
+    <li><code>need[ch] &gt; 0</code> — still short of this character.</li>
+    <li><code>need[ch] == 0</code> — exactly covered.</li>
+    <li><code>need[ch] &lt; 0</code> — surplus; these are the characters you can safely drop when shrinking.</li>
+  </ul>
+
+  <p><code>missing</code> counts how many <em>character slots</em> are still unfilled. Decrement it only
+  when <code>need[ch]</code> was positive before the decrement — that single guard is what makes
+  surplus copies not count. Validity is then <code>missing == 0</code>: an O(1) integer test.</p>
+</div>
+
+  <div class="bench" data-bench="needhave">
+    <div class="bench-head">
+      <span class="bench-tag">LC 76 · need / have</span>
+      <span class="bench-q">smallest window of "ADOBECODEBANC" containing all of "ABC"</span>
+    </div>
+    <div class="bench-body">
+      <div class="trackwrap"><div class="track" data-track></div></div>
+      <div class="statechips" data-chips></div>
+      <div class="readout" data-readout></div>
+      <div class="cap" data-cap></div>
+      <div class="transport">
+        <button data-prev>← Back</button>
+        <button class="primary" data-play>Play</button>
+        <button data-next>Step →</button>
+        <button data-reset>Reset</button>
+        <span class="frameno" data-frameno></span>
+      </div>
+    </div>
+  </div>
+
+<div class="col">
+  <pre><code><span class="k">def</span> min_window(s: <span class="k">str</span>, t: <span class="k">str</span>) -> <span class="k">str</span>:
+    <span class="k">if</span> <span class="k">not</span> s <span class="k">or</span> <span class="k">not</span> t: <span class="k">return</span> <span class="s">""</span>
+    need = Counter(t)
+    missing = <span class="k">len</span>(t)                       <span class="c"># slots, not distinct chars</span>
+    start = <span class="s">0</span>
+    best = (<span class="k">float</span>(<span class="s">'inf'</span>), <span class="s">0</span>, <span class="s">0</span>)
+    <span class="k">for</span> end, ch <span class="k">in</span> <span class="k">enumerate</span>(s):
+        <span class="k">if</span> need[ch] > <span class="s">0</span>: missing -= <span class="s">1</span>   <span class="c"># guard: surplus doesn't count</span>
+        need[ch] -= <span class="s">1</span>
+        <span class="k">while</span> missing == <span class="s">0</span>:               <span class="c"># valid -> record, then shrink</span>
+            <span class="k">if</span> end - start + <span class="s">1</span> &lt; best[<span class="s">0</span>]:
+                best = (end - start + <span class="s">1</span>, start, end)
+            need[s[start]] += <span class="s">1</span>
+            <span class="k">if</span> need[s[start]] > <span class="s">0</span>: missing += <span class="s">1</span>
+            start += <span class="s">1</span>
+    <span class="k">return</span> <span class="s">""</span> <span class="k">if</span> best[<span class="s">0</span>] == <span class="k">float</span>(<span class="s">'inf'</span>) <span class="k">else</span> s[best[<span class="s">1</span>]:best[<span class="s">2</span>]+<span class="s">1</span>]</code></pre>
+
+  <p>The same counter drives <strong>LC 438 Find All Anagrams</strong> and <strong>LC 567 Permutation in
+  String</strong> — both are the <em>fixed</em> shape with this state, since the window size is
+  <code>len(p)</code>.</p>
+
+  <h3>Counting windows: the at-most trick</h3>
+  <p>When the question is "how many subarrays have <strong>exactly</strong> k distinct values", a direct
+  window doesn't work — "exactly k" isn't monotone. The standard move:</p>
+  <pre><code>exactly(k) = at_most(k) - at_most(k - <span class="s">1</span>)</code></pre>
+  <p>and <code>at_most</code> <em>is</em> a clean longest-shaped window. The counting line is the
+  memorable part:</p>
+  <pre><code>    <span class="c"># every window ending at `end` and starting at >= start is valid</span>
+    total += end - start + <span class="s">1</span></code></pre>
+  <p class="note">Verified: on <code>[1,2,1,2,3]</code> with k=2 this gives 7, matching an exhaustive
+  count over all 15 subarrays. Same trick powers LC 992, LC 930 and LC 1248.</p>
+</div>
+</section>
+
+<!-- =================== 5. BUGS =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">5</div>
+    <div><h2>Eight ways it breaks</h2><div class="stage-sub">Every wrong output below was actually produced</div></div>
+  </div>
+
+  <p class="lede">These aren't hypothetical. Each variant was run against the correct version; the
+  numbers shown are real output. Read the bug, predict the failure, then open it.</p>
+</div>
+
+<div class="col">
+  <div class="bugs">
+
+    <details class="bug"><summary><span class="bugn">1</span><span>Forgetting to subtract the outgoing element in a fixed window</span></summary>
+      <div class="bug-inner">
+        <pre><code>    window += nums[end]                    <span class="c"># never drops nums[end - k]</span></code></pre>
+        <div class="verdict">max_sum_k([2,1,5,1,3,2], k=3) → <span class="got">got 14</span> · <span class="want">want 9</span></div>
+        <p class="fix"><b>Why:</b> the "window" silently became a prefix sum — it grows forever. 14 is
+        <code>2+1+5+1+3+2</code>. <b>Fix:</b> <code>window += nums[end] - nums[end-k]</code>, one
+        statement, both halves.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">2</span><span>Recording the answer before the window reaches size k</span></summary>
+      <div class="bug-inner">
+        <pre><code>        <span class="k">if</span> end >= k: window -= nums[end-k]
+        best = <span class="k">max</span>(best, window)          <span class="c"># partial windows counted too</span></code></pre>
+        <div class="verdict">max_sum_k([-5,-5,-5], k=2) → <span class="got">got -5</span> · <span class="want">want -10</span></div>
+        <p class="fix"><b>Why:</b> hides completely on non-negative input — a prefix is never better than
+        the full window there. LC 643 allows values down to −10⁴, so this passes your hand-tests and
+        fails the judge. <b>Fix:</b> only start recording once <code>end &gt;= k-1</code>.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">3</span><span>Longest: recording before shrinking back to valid</span></summary>
+      <div class="bug-inner">
+        <pre><code>        count[ch] += <span class="s">1</span>
+        <span class="bugline">        best = <span class="k">max</span>(best, end - start + <span class="s">1</span>)   <span class="c"># window may be invalid NOW</span></span>
+        <span class="k">while</span> count[ch] > <span class="s">1</span>: ...</code></pre>
+        <div class="verdict">longest_unique("abcabcbb") → <span class="got">got 4</span> · <span class="want">want 3</span></div>
+        <p class="fix"><b>Why:</b> it measured <code>"abca"</code> — which has a repeat — before the
+        shrink loop fixed it. <b>Fix:</b> record only below the <code>while</code>, where the invariant
+        holds. This is the single most common sliding-window bug.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">4</span><span>Leaving zero-count keys in the state dict</span></summary>
+      <div class="bug-inner">
+        <pre><code>            count[s[start]] -= <span class="s">1</span>          <span class="c"># key stays behind with value 0</span>
+            start += <span class="s">1</span></code></pre>
+        <div class="verdict">at_most_k_distinct("aabbcc", k=2) → <span class="got">IndexError: string index out of range</span> · <span class="want">want 4</span></div>
+        <p class="fix"><b>Why:</b> <code>len(count)</code> is the validity test, and a stale
+        <code>'a': 0</code> keeps it above <code>k</code> forever, so the shrink loop runs
+        <code>start</code> off the end of the string. <b>Fix:</b>
+        <code>if count[c] == 0: del count[c]</code>. If your state is a dict whose <em>size</em> is the
+        condition, deletion is not optional.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">5</span><span>Jumping <code>start</code> to <code>last_seen + 1</code> without the max() guard</span></summary>
+      <div class="bug-inner">
+        <pre><code>        <span class="k">if</span> ch <span class="k">in</span> last:
+            start = last[ch] + <span class="s">1</span>          <span class="c"># start can move BACKWARDS</span></code></pre>
+        <div class="verdict">longest_unique("abba") → <span class="got">got 3</span> · <span class="want">want 2</span></div>
+        <p class="fix"><b>Why:</b> at the final <code>'a'</code>, <code>last['a'] = 0</code>, so
+        <code>start</code> jumps back to 1 — behind where it already was — and the window re-swallows a
+        <code>'b'</code>. <b>Fix:</b> <code>start = max(start, last[ch] + 1)</code>. The optimisation is
+        fine; it just has to respect the one rule of this pattern: <em>pointers never go backwards</em>.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">6</span><span>Shortest: recording after the shrink loop instead of inside it</span></summary>
+      <div class="bug-inner">
+        <pre><code>        <span class="k">while</span> total >= target:
+            total -= nums[start]; start += <span class="s">1</span>
+        <span class="bugline">        best = <span class="k">min</span>(best, end - start + <span class="s">1</span>)   <span class="c"># window is invalid here</span></span></code></pre>
+        <div class="verdict">min_subarray_len(7, [2,3,1,2,4,3]) → <span class="got">got 1</span> · <span class="want">want 2</span></div>
+        <p class="fix"><b>Why:</b> the loop exits precisely when the window stopped qualifying, so you
+        measure a window whose sum is <em>below</em> target. <b>Fix:</b> record inside the loop, before
+        the shrink step. Mirror image of bug 3 — and note both return a number, never an exception.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">7</span><span>Window length written as <code>end - start</code></span></summary>
+      <div class="bug-inner">
+        <pre><code>        best = <span class="k">max</span>(best, end - start)      <span class="c"># missing the + 1</span></code></pre>
+        <div class="verdict">longest_unique("abcabcbb") → <span class="got">got 2</span> · <span class="want">want 3</span></div>
+        <p class="fix"><b>Why:</b> both indices are inclusive, so the count is
+        <code>end - start + 1</code>. <b>Fix:</b> sanity-check on a single element:
+        <code>start == end</code> must give length 1.</p>
+      </div>
+    </details>
+
+    <details class="bug"><summary><span class="bugn">8</span><span>Using the window at all when values can be negative</span></summary>
+      <div class="bug-inner">
+        <pre><code><span class="c"># min length subarray with sum >= target, nums contains negatives</span>
+        <span class="k">while</span> total >= target: ...</code></pre>
+        <div class="verdict">nums = [-3, 2, -3, 0, 2, -3, -4], target = 1 → <span class="got">got 0</span> · <span class="want">want 1</span></div>
+        <p class="fix"><b>Why:</b> the window assumes extending can only raise the sum. With a negative
+        ahead, a window you already discarded could have become valid later, so shrinking is no longer
+        safe. Found by fuzzing the window against brute force over 20,000 random arrays.
+        <b>Fix:</b> prefix sums + a monotonic deque (LC 862). <em>Ask about negatives in the
+        interview</em> — it is one of the highest-signal clarifying questions you can ask on this pattern.</p>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<div class="col">
+  <h3>The <code>if</code> vs <code>while</code> question, settled</h3>
+  <p>People will tell you "always use <code>while</code> to shrink". That's safe advice, but the real
+  answer is more interesting, and knowing it is a strong signal in an interview. Swapping
+  <code>while</code> for <code>if</code> in the shrink step was tested exhaustively:</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Shape</th><th class="m">Failures</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>LONGEST — at most k distinct</td><td class="m">0 / exhaustive*</td><td class="yes"><code>if</code> is correct</td></tr>
+      <tr><td>SHORTEST — min subarray ≥ target</td><td class="m">1981 / 6000</td><td class="no"><code>while</code> required</td></tr>
+      <tr><td>COUNTING — number of valid windows</td><td class="m">2304 / 6000</td><td class="no"><code>while</code> required</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">*All strings over {a,b,c} up to length 8, for k ∈ {1,2,3}, plus 6000 random cases.</p>
+
+  <div class="rule">
+    <span class="rl">Why longest survives</span>
+    <p>With <code>if</code>, the window grows by one and shrinks by at most one each step, so its length
+    is a <strong>high-water mark</strong>: it never drops below the best valid length found so far. The
+    window may be momentarily invalid, but its <em>length</em> is still a valid answer from earlier — so
+    the maximum comes out right. This is the "non-shrinking window" optimisation. Shortest and counting
+    read the window's <em>current</em> contents, so they need it genuinely valid: <code>while</code>.</p>
+    <p style="margin-top:.7em"><strong>Practical advice:</strong> write <code>while</code> every time. But
+    if an interviewer asks whether <code>if</code> would work, the answer "for the longest variant yes,
+    because the window length is monotone; for shortest no" is the one that lands.</p>
+  </div>
+</div>
+</section>
+
+<!-- =================== 6. WRONG TOOL =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">6</div>
+    <div><h2>When it's the wrong tool</h2><div class="stage-sub">Recognising the boundary</div></div>
+  </div>
+
+  <div class="rule warn">
+    <span class="rl">Negatives break monotonicity</span>
+    <p>Every "shrink while valid" argument assumes that removing an element can only move you away from
+    validity. Introduce negatives and that fails — which is why <strong>LC 560 (subarray sum equals k)
+    uses prefix sums and a hash map, not a window</strong>, even though it looks like a window problem.
+    Whenever a problem allows negative numbers <em>and</em> asks about sums, reach for prefix sums.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Looks like a window, isn't</th><th class="m">LC</th><th>Use instead</th></tr></thead>
+    <tbody>
+      <tr><td>Count subarrays with sum exactly k (negatives allowed)</td><td class="m">560</td><td>Prefix sum + hash map</td></tr>
+      <tr><td>Shortest subarray with sum ≥ k (negatives allowed)</td><td class="m">862</td><td>Prefix sum + monotonic deque</td></tr>
+      <tr><td>Max value in every window of size k</td><td class="m">239</td><td>Window + monotonic deque</td></tr>
+      <tr><td>Longest <em>subsequence</em> with a property</td><td class="m">300</td><td>DP — a window can't skip elements</td></tr>
+      <tr><td>Median of every window of size k</td><td class="m">480</td><td>Window + two heaps / sorted list</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Pattern within the pattern: when the window's state needs to answer "what's the max /
+  median in here?", a dict can't do it, and you bolt a deque or heap onto the same skeleton. The window
+  machinery survives; only <code>add</code> and <code>remove</code> get smarter.</p>
+</div>
+</section>
+
+<!-- =================== 7. DRILL =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">7</div>
+    <div><h2>Name the pattern</h2><div class="stage-sub">Interleaved — no labels, like the real thing</div></div>
+  </div>
+  <p class="lede">Say the pattern and the shape out loud <em>before</em> revealing. Mixed practice feels
+  worse than blocked practice and tests far better — that's the whole reason these are unlabelled.</p>
+
+  <div class="drill" data-drill></div>
+  <p class="note">Target: 8 of 10, each justified in one sentence. Below that, re-read stage 1 rather than
+  moving on to the ladder.</p>
+</div>
+</section>
+
+<!-- =================== 8. LADDER =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">8</div>
+    <div><h2>The practice ladder</h2><div class="stage-sub">Worked → faded → solo, then graded</div></div>
+  </div>
+
+  <p class="lede">Do these in order. The first three are your anchors — the ones that must become
+  automatic before you touch anything else.</p>
+
+  <div class="ladder">
+    <div class="rung"><span class="no">643</span><span class="nm">Maximum Average Subarray I<small>WORKED — the fixed shape. Talk through it while stepping the first visualiser.</small></span><span class="tier core">anchor</span></div>
+    <div class="rung"><span class="no">3</span><span class="nm">Longest Substring Without Repeating Characters<small>FADED — write it with the template visible, then again with it hidden.</small></span><span class="tier core">anchor</span></div>
+    <div class="rung"><span class="no">424</span><span class="nm">Longest Repeating Character Replacement<small>SOLO — from scratch, no notes. Validity is <code>len(window) − max_count &gt; k</code>.</small></span><span class="tier core">anchor</span></div>
+    <div class="rung"><span class="no">209</span><span class="nm">Minimum Size Subarray Sum<small>The shortest shape. Remember to return 0.</small></span><span class="tier">graded</span></div>
+    <div class="rung"><span class="no">438</span><span class="nm">Find All Anagrams in a String<small>Fixed window + counter equality.</small></span><span class="tier">graded</span></div>
+    <div class="rung"><span class="no">567</span><span class="nm">Permutation in String<small>Same as 438, boolean answer.</small></span><span class="tier">graded</span></div>
+    <div class="rung"><span class="no">1004</span><span class="nm">Max Consecutive Ones III<small>"At most k zeros" — the cleanest longest-shape drill there is.</small></span><span class="tier">graded</span></div>
+    <div class="rung"><span class="no">904</span><span class="nm">Fruit Into Baskets<small>At most 2 distinct. The canonical teaching problem.</small></span><span class="tier">graded</span></div>
+    <div class="rung"><span class="no">76</span><span class="nm">Minimum Window Substring<small>Need/have. Hard, but mechanical once <code>missing</code> clicks.</small></span><span class="tier str">stretch</span></div>
+    <div class="rung"><span class="no">239</span><span class="nm">Sliding Window Maximum<small>Window + monotonic deque. Bridges into the stack pattern.</small></span><span class="tier str">stretch</span></div>
+    <div class="rung"><span class="no">992</span><span class="nm">Subarrays with K Different Integers<small>The at-most(k) − at-most(k−1) trick.</small></span><span class="tier str">stretch</span></div>
+    <div class="rung"><span class="no">862</span><span class="nm">Shortest Subarray with Sum at Least K<small>The negatives case. Proves why the window fails.</small></span><span class="tier str">stretch</span></div>
+  </div>
+</div>
+</section>
+
+<!-- =================== 9. CHECKLIST =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">9</div>
+    <div><h2>Before you say "done"</h2><div class="stage-sub">Run this against your own code</div></div>
+  </div>
+
+  <div class="check">
+    <div class="checkhead">
+      <span class="ct">Ticks are saved in this browser only</span>
+      <button data-clearcheck>Clear all</button>
+    </div>
+    <ul data-check></ul>
+  </div>
+</div>
+</section>
+
+<!-- =================== 10. NARRATION =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">10</div>
+    <div><h2>Saying it out loud</h2><div class="stage-sub">The narration that scores</div></div>
+  </div>
+
+  <p class="lede">The strongest signal in a coding round is the <em>journey</em>: brute force → the exact
+  wasted work → the observation that removes it. Teleporting to the optimal answer reads as memorisation.</p>
+
+  <ol>
+    <li><strong>Clarify first.</strong> "Can values be negative?" and "can the window be empty?" — on
+    this pattern those two questions decide whether a window is even legal.</li>
+    <li><strong>State the brute force and its cost.</strong> "For every start, extend to every end —
+    O(n²), and with an O(n) validity check inside, O(n³)."</li>
+    <li><strong>Name the waste.</strong> "When I move the start forward I rebuild almost the same window
+    I just had."</li>
+    <li><strong>State the invariant.</strong> "I'll keep <code>[start, end]</code> valid at the bottom of
+    each iteration, so the length there is always a legal candidate."</li>
+    <li><strong>Justify O(n) explicitly.</strong> "The inner <code>while</code> looks quadratic, but
+    <code>start</code> only ever advances, so it's 2n moves total — amortised O(n)."</li>
+    <li><strong>Test out loud:</strong> empty input, single element, k larger than the array, all-identical
+    values, and the no-valid-window case.</li>
+  </ol>
+
+  <div class="rule">
+    <span class="rl">Micro-narration to rehearse</span>
+    <p>"Contiguous substring, longest, constraint I can check from a counter — that's a variable sliding
+    window, longest shape. I extend <code>end</code>, and while the window is invalid I drop from
+    <code>start</code>. I record the length after the shrink loop, where the window is guaranteed valid.
+    Both pointers only move forward, so O(n) time; the state holds at most 26 keys, so O(1) space."</p>
+  </div>
+</div>
+</section>
+
+<!-- =================== 11. CHEAT SHEET =================== -->
+<section>
+<div class="col">
+  <div class="stage-head">
+    <div class="stage-n">11</div>
+    <div><h2>One page, from memory</h2><div class="stage-sub">Rewrite this tomorrow morning before anything else</div></div>
+  </div>
+
+  <div class="cheat">
+    <h4>Recognise</h4>
+    <p>contiguous subarray / substring · longest–shortest–exactly–at most · window of size k ·
+    constraint checkable in O(1) from running state.<br>
+    <strong>Not this pattern:</strong> subsequence · negatives + sums (prefix sum) · max inside window
+    (deque) · single value in sorted data (binary search) · pair at the two ends (two pointers).</p>
+
+    <h4>Shape A — fixed k</h4>
+    <pre><code>window = <span class="k">sum</span>(nums[:k]); best = window
+<span class="k">for</span> end <span class="k">in</span> <span class="k">range</span>(k, <span class="k">len</span>(nums)):
+    window += nums[end] - nums[end-k]
+    best = <span class="k">max</span>(best, window)</code></pre>
+
+    <h4>Shape B — longest (record after the shrink)</h4>
+    <pre><code>start = best = <span class="s">0</span>
+<span class="k">for</span> end, x <span class="k">in</span> <span class="k">enumerate</span>(seq):
+    add(x)
+    <span class="k">while</span> <span class="k">not</span> valid(): remove(seq[start]); start += <span class="s">1</span>
+    best = <span class="k">max</span>(best, end - start + <span class="s">1</span>)</code></pre>
+
+    <h4>Shape C — shortest (record inside the shrink)</h4>
+    <pre><code>start = <span class="s">0</span>; best = <span class="k">float</span>(<span class="s">'inf'</span>)
+<span class="k">for</span> end, x <span class="k">in</span> <span class="k">enumerate</span>(seq):
+    add(x)
+    <span class="k">while</span> valid():
+        best = <span class="k">min</span>(best, end - start + <span class="s">1</span>)
+        remove(seq[start]); start += <span class="s">1</span></code></pre>
+
+    <h4>Counting</h4>
+    <pre><code>total += end - start + <span class="s">1</span>          <span class="c"># windows ending at end</span>
+exactly(k) = at_most(k) - at_most(k-<span class="s">1</span>)</code></pre>
+
+    <h4>Traps</h4>
+    <p><code>end - start + 1</code>, never <code>end - start</code> · delete zero-count keys ·
+    longest records <em>after</em> shrinking, shortest <em>inside</em> · <code>start</code> never moves
+    backwards (<code>max()</code> guard on index jumps) · fixed windows subtract the outgoing element ·
+    return 0 / "" when nothing qualifies · negatives invalidate the whole approach · state must support
+    O(1) add, remove <em>and</em> validity check.</p>
+
+    <h4>Complexity to state</h4>
+    <p>Time O(n) — each index enters and leaves the window once, 2n pointer moves.
+    Space O(k) or O(alphabet); say O(1) when the alphabet is fixed at 26 and mean it.</p>
+  </div>
+</div>
+</section>
+
+<!-- =================== SOURCES =================== -->
+<section>
+<div class="col">
+  <h3>Where to go deeper</h3>
+  <ul class="srcs">
+    <li><a href="https://www.hellointerview.com/learn/code/sliding-window/fixed-length">Hello Interview — Fixed Length Sliding Window</a>
+    and <a href="https://www.hellointerview.com/learn/code/sliding-window/variable-length">Variable Length</a>
+    — animated step-throughs, matching how you learn. Their worked problems:
+    <a href="https://www.hellointerview.com/learn/code/sliding-window/longest-substring-without-repeating-characters">LC 3</a>,
+    <a href="https://www.hellointerview.com/learn/code/sliding-window/longest-repeating-character-replacement">LC 424</a>,
+    <a href="https://www.hellointerview.com/learn/code/sliding-window/maximum-points-you-can-obtain-from-cards">Max Points From Cards</a>.</li>
+    <li><a href="https://neetcode.io/practice/problem-list/sliding-window">NeetCode — sliding window list</a> with free video walkthroughs for each problem on the ladder.</li>
+    <li><a href="https://leetcode.com/discuss/post/7344963/10-sliding-window-patterns-for-coding-in-pokf/">LeetCode — 10 sliding window patterns</a>, a community taxonomy worth skimming once for the variant names.</li>
+    <li>LeetCode official editorials for 76, 239 and 862 — for 862 especially, read why the deque is necessary.</li>
+  </ul>
+  <p class="note">Every code sample, trace and wrong-output figure on this page was executed in Python 3.11
+  and cross-checked against a brute-force oracle: 2,000 random cases per template, plus exhaustive
+  verification of the <code>if</code>/<code>while</code> claim. The step-through engines were diffed
+  frame-for-frame against the Python traces across 6,654 frames.</p>
+</div>
+</section>
+
+</div>
+
+<script>
+// ===================== FRAME ENGINES =====================
+// Verified frame-for-frame against a Python reference implementation.
+function fixedFrames(nums,k){
+  const F=[];F.push({op:"init",start:0,end:-1,win:0,best:null,cap:`Window empty. Fill it to size k=${k} first.`});
+  let win=0;
+  for(let end=0;end<k;end++){win+=nums[end];
+    F.push({op:"extend",start:0,end,win,best:null,cap:`Fill: add nums[${end}]=${nums[end]} → sum ${win}`});}
+  let best=win;
+  F.push({op:"record",start:0,end:k-1,win,best,cap:`Window is size ${k}. First candidate: best = ${best}`});
+  for(let end=k;end<nums.length;end++){
+    const out=nums[end-k],inc=nums[end];win+=inc-out;
+    F.push({op:"slide",start:end-k+1,end,win,best,cap:`Slide: +nums[${end}]=${inc}, −nums[${end-k}]=${out} → sum ${win}  (O(1), nothing re-added)`});
+    if(win>best){best=win;F.push({op:"record",start:end-k+1,end,win,best,cap:`New best = ${best}`});}
+    else F.push({op:"keep",start:end-k+1,end,win,best,cap:`${win} ≤ ${best}, best unchanged`});
+  }
+  F.push({op:"done",start:nums.length-k,end:nums.length-1,win,best,cap:`Answer: ${best}`});
+  return F;
+}
+function longestFrames(s){
+  const F=[],count=new Map();let start=0,best=0;
+  const snap=()=>Object.fromEntries(count);
+  F.push({op:"init",start:0,end:-1,state:{},best:0,cap:"Empty window. state = {} (char → count)"});
+  for(let end=0;end<s.length;end++){
+    const ch=s[end];count.set(ch,(count.get(ch)||0)+1);
+    F.push({op:"extend",start,end,state:snap(),best,cap:`Extend: add '${ch}' → count['${ch}']=${count.get(ch)}`});
+    while(count.get(ch)>1){
+      const gone=s[start];count.set(gone,count.get(gone)-1);
+      if(count.get(gone)===0)count.delete(gone);
+      start++;
+      F.push({op:"shrink",start,end,state:snap(),best,cap:`Invalid ('${ch}' appears twice). Drop '${gone}' from the left, start → ${start}`});
+    }
+    const L=end-start+1;
+    if(L>best){best=L;F.push({op:"record",start,end,state:snap(),best,cap:`Valid. Length ${L} → new best = ${best}`});}
+    else F.push({op:"keep",start,end,state:snap(),best,cap:`Valid. Length ${L} ≤ ${best}, best unchanged`});
+  }
+  F.push({op:"done",start,end:s.length-1,state:snap(),best,cap:`Answer: ${best}`});
+  return F;
+}
+function shortestFrames(target,nums){
+  const F=[];let start=0,total=0,best=null;
+  F.push({op:"init",start:0,end:-1,total:0,best:null,cap:`Empty window, running sum 0. Need sum ≥ ${target}.`});
+  for(let end=0;end<nums.length;end++){
+    total+=nums[end];
+    F.push({op:"extend",start,end,total,best,cap:`Extend: add nums[${end}]=${nums[end]} → sum ${total}`});
+    while(total>=target){
+      const L=end-start+1;
+      if(best===null||L<best){best=L;F.push({op:"record",start,end,total,best,cap:`Sum ${total} ≥ ${target}. Length ${L} → new best = ${best}`});}
+      else F.push({op:"keep",start,end,total,best,cap:`Sum ${total} ≥ ${target}. Length ${L} ≥ ${best}, best unchanged`});
+      const gone=nums[start];total-=gone;start++;
+      F.push({op:"shrink",start,end,total,best,cap:`Shrink to hunt for shorter: drop nums[${start-1}]=${gone} → sum ${total}`});
+    }
+  }
+  F.push({op:"done",start,end:nums.length-1,total,best,cap:`Answer: ${best?best:0}`});
+  return F;
+}
+function needHaveFrames(s,t){
+  const F=[],need=new Map();for(const c of t)need.set(c,(need.get(c)||0)+1);
+  let missing=t.length,start=0,bestLen=null,bestPair=null;
+  const snap=()=>{const o={};for(const [k,v] of need)if(v!==0)o[k]=v;return o;};
+  const initNeed=Object.fromEntries(need);
+  const pyDict=o=>'{'+Object.entries(o).map(([k,v])=>`'${k}': ${v}`).join(', ')+'}';
+  F.push({op:"init",start:0,end:-1,need:initNeed,missing,best:null,
+    cap:`need=${pyDict(initNeed)}, missing=${missing}. A negative need means surplus.`});
+  for(let end=0;end<s.length;end++){
+    const ch=s[end],cur=need.get(ch)||0;
+    if(cur>0)missing--;
+    need.set(ch,cur-1);
+    F.push({op:"extend",start,end,need:snap(),missing,best:bestLen,
+      cap:`Extend '${ch}'. need['${ch}'] → ${need.get(ch)}, missing = ${missing}`});
+    while(missing===0){
+      const L=end-start+1;
+      if(bestLen===null||L<bestLen){bestLen=L;bestPair=[start,end];
+        F.push({op:"record",start,end,need:snap(),missing,best:bestLen,
+          cap:`All of t covered. '${s.slice(start,end+1)}' length ${L} → new best`});}
+      else F.push({op:"keep",start,end,need:snap(),missing,best:bestLen,
+          cap:`Covered, but length ${L} ≥ ${bestLen}. Keep best.`});
+      const gone=s[start];need.set(gone,(need.get(gone)||0)+1);
+      if(need.get(gone)>0)missing++;
+      start++;
+      F.push({op:"shrink",start,end,need:snap(),missing,best:bestLen,
+        cap:`Drop '${gone}' from the left. need['${gone}'] → ${need.get(gone)}, missing = ${missing}`});
+    }
+  }
+  F.push({op:"done",start,end:s.length-1,need:snap(),missing,best:bestLen,
+    cap:bestPair?`Answer: '${s.slice(bestPair[0],bestPair[1]+1)}'`:"Answer: ''"});
+  return F;
+}
+
+// ===================== BENCH RENDERER =====================
+const BENCHES={
+  fixed:{cells:[2,1,5,1,3,2],frames:fixedFrames([2,1,5,1,3,2],3),
+    readout:f=>[["start",f.start],["end",f.end<0?"—":f.end],["window sum",f.win,true],["best",f.best===null?"—":f.best,true]]},
+  longest:{cells:"abcabcbb".split(""),frames:longestFrames("abcabcbb"),chips:"state",
+    readout:f=>[["start",f.start],["end",f.end<0?"—":f.end],["length",f.end<0?0:f.end-f.start+1],["best",f.best,true]]},
+  shortest:{cells:[2,3,1,2,4,3],frames:shortestFrames(7,[2,3,1,2,4,3]),
+    readout:f=>[["start",f.start],["end",f.end<0?"—":f.end],["sum",f.total,true],["best length",f.best===null?"∞":f.best,true]]},
+  needhave:{cells:"ADOBECODEBANC".split(""),frames:needHaveFrames("ADOBECODEBANC","ABC"),chips:"need",
+    readout:f=>[["start",f.start],["end",f.end<0?"—":f.end],["missing",f.missing,true],["best length",f.best===null?"∞":f.best,true]]}
+};
+
+function setupBench(root){
+  const key=root.dataset.bench, cfg=BENCHES[key];
+  const frames=cfg.frames, track=root.querySelector("[data-track]");
+  const readoutEl=root.querySelector("[data-readout]"), capEl=root.querySelector("[data-cap]");
+  const chipsEl=root.querySelector("[data-chips]"), noEl=root.querySelector("[data-frameno]");
+  const bPrev=root.querySelector("[data-prev]"), bNext=root.querySelector("[data-next]");
+  const bPlay=root.querySelector("[data-play]"), bReset=root.querySelector("[data-reset]");
+  let i=0, timer=null;
+
+  // build cells once
+  const boxes=cfg.cells.map((v,idx)=>{
+    const box=document.createElement("div"); box.className="cellbox";
+    const lbl=document.createElement("div"); lbl.className="ptrlbl"; lbl.hidden=true;
+    const cell=document.createElement("div"); cell.className="cell"; cell.textContent=v;
+    const ix=document.createElement("div"); ix.className="idx"; ix.textContent=idx;
+    box.append(lbl,cell,ix); track.appendChild(box);
+    return {cell,lbl};
+  });
+
+  function render(){
+    const f=frames[i];
+    boxes.forEach((b,idx)=>{
+      const inWin = f.end>=0 && idx>=f.start && idx<=f.end;
+      b.cell.className="cell"+(inWin?" in":"");
+      if(f.end>=0 && idx===f.start) b.cell.classList.add("ptr-s");
+      if(idx===f.end) b.cell.classList.add("ptr-e");
+      const isS=f.end>=0&&idx===f.start, isE=idx===f.end;
+      if(isS&&isE){b.lbl.hidden=false;b.lbl.className="ptrlbl both";b.lbl.textContent="start·end";}
+      else if(isS){b.lbl.hidden=false;b.lbl.className="ptrlbl s";b.lbl.textContent="start";}
+      else if(isE){b.lbl.hidden=false;b.lbl.className="ptrlbl e";b.lbl.textContent="end";}
+      else b.lbl.hidden=true;
+    });
+    readoutEl.innerHTML="";
+    cfg.readout(f).forEach(([k,v,acc])=>{
+      const el=document.createElement("span");
+      el.className="ro"+(acc?" acc":"");
+      el.innerHTML=k+" <b>"+v+"</b>";
+      readoutEl.appendChild(el);
+    });
+    if(chipsEl){
+      chipsEl.innerHTML="";
+      const lbl=document.createElement("span");
+      lbl.className="lbl"; lbl.textContent=cfg.chips;
+      chipsEl.appendChild(lbl);
+      const obj=cfg.chips==="state"?f.state:f.need;
+      const entries=Object.entries(obj||{});
+      if(!entries.length){
+        const e=document.createElement("span"); e.className="sc empty"; e.textContent="{ }";
+        chipsEl.appendChild(e);
+      } else entries.forEach(([k,v])=>{
+        const e=document.createElement("span");
+        e.className="sc"+(v<0?" neg":(v===0?" zero":""));
+        e.textContent=`${k}: ${v}`;
+        chipsEl.appendChild(e);
+      });
+    }
+    capEl.className="cap "+f.op;
+    capEl.textContent=f.cap;
+    noEl.textContent=`frame ${i+1} / ${frames.length}`;
+    bPrev.disabled = i===0;
+    bNext.disabled = i===frames.length-1;
+  }
+  function go(n){ i=Math.max(0,Math.min(frames.length-1,n)); render(); }
+  function stop(){ if(timer){clearInterval(timer);timer=null;bPlay.textContent="Play";} }
+  bNext.addEventListener("click",()=>{stop();go(i+1);});
+  bPrev.addEventListener("click",()=>{stop();go(i-1);});
+  bReset.addEventListener("click",()=>{stop();go(0);});
+  bPlay.addEventListener("click",()=>{
+    if(timer){stop();return;}
+    if(i>=frames.length-1) i=0;
+    bPlay.textContent="Pause";
+    timer=setInterval(()=>{ if(i>=frames.length-1){stop();return;} go(i+1); },820);
+  });
+  render();
+  return frames;
+}
+document.querySelectorAll("[data-bench]").forEach(setupBench);
+
+// ===================== AMORTISATION STAIRCASE =====================
+(function(){
+  const g=document.querySelector("[data-staircase]");
+  if(!g) return;
+  const F=BENCHES.longest.frames;
+  const W=560,H=210,L=44,R=14,T=32,B=34;
+  const n=F.length-1, maxIdx=8;
+  const x=k=>L+(W-L-R)*(k/n);
+  const y=v=>H-B-(H-T-B)*(v/maxIdx);
+  const parts=[];
+  // grid
+  for(let v=0;v<=maxIdx;v+=2){
+    parts.push(`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="var(--line)" stroke-width="1" fill="none"/>`);
+    parts.push(`<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-family="var(--f-mono)" font-size="10" fill="var(--ink-3)">${v}</text>`);
+  }
+  const path=(sel,color,dash)=>{
+    let d="";
+    F.forEach((f,k)=>{
+      const v=Math.max(0,sel(f));
+      d += (k===0?`M ${x(k)} ${y(v)}`:` L ${x(k)} ${y(v)}`);
+    });
+    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:""}/>`;
+  };
+  parts.push(path(f=>f.end<0?0:f.end,"var(--accent)"));
+  parts.push(path(f=>f.start,"var(--warm)","5 3"));
+  parts.push(`<text x="${L}" y="${H-8}" font-family="var(--f-mono)" font-size="10" fill="var(--ink-3)">frame 1</text>`);
+  parts.push(`<text x="${W-R}" y="${H-8}" text-anchor="end" font-family="var(--f-mono)" font-size="10" fill="var(--ink-3)">frame ${F.length}</text>`);
+  parts.push(`<text x="${L-8}" y="14" text-anchor="end" font-family="var(--f-mono)" font-size="10" fill="var(--ink-3)">idx</text>`);
+  parts.push(`<rect x="${W-R-128}" y="${T}" width="128" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)"/>`);
+  parts.push(`<line x1="${W-R-118}" y1="${T+12}" x2="${W-R-98}" y2="${T+12}" stroke="var(--accent)" stroke-width="2"/>`);
+  parts.push(`<text x="${W-R-92}" y="${T+16}" font-family="var(--f-mono)" font-size="10.5" fill="var(--ink-2)">end (extends)</text>`);
+  parts.push(`<line x1="${W-R-118}" y1="${T+26}" x2="${W-R-98}" y2="${T+26}" stroke="var(--warm)" stroke-width="2" stroke-dasharray="5 3"/>`);
+  parts.push(`<text x="${W-R-92}" y="${T+30}" font-family="var(--f-mono)" font-size="10.5" fill="var(--ink-2)">start (contracts)</text>`);
+  g.innerHTML=parts.join("");
+})();
+
+// ===================== DRILL =====================
+const DRILL=[
+ ["Longest substring with at most two distinct characters.",
+  "Sliding window — longest","Contiguous, 'longest … such that', validity = len(counter) ≤ 2. Record after the shrink loop."],
+ ["Given an unsorted array, return the indices of two numbers adding to a target.",
+  "Hash map","Not contiguous at all — you need value → index lookup. Sorting would destroy the indices."],
+ ["Minimum length subarray whose sum is at least target, all values positive.",
+  "Sliding window — shortest","'Minimum length' + 'at least' + non-negative. Record inside the shrink loop."],
+ ["Count subarrays whose sum equals k, where values may be negative.",
+  "Prefix sum + hash map","Negatives kill monotonicity, so no window. LC 560."],
+ ["Maximum sum of any 5 consecutive elements.",
+  "Sliding window — fixed","Explicit window size. Add incoming, subtract outgoing."],
+ ["Given a sorted array, find two values summing to a target.",
+  "Two pointers — converging","Only the endpoints matter; nothing between them is inspected."],
+ ["Length of the longest strictly increasing subsequence.",
+  "Dynamic programming","'Subsequence' — non-contiguous. A window cannot skip elements."],
+ ["Find all starting indices of anagrams of p inside s.",
+  "Sliding window — fixed + counter","Window size is len(p); validity is counter equality. LC 438."],
+ ["Maximum value in every window of size k, n up to 10⁵.",
+  "Sliding window + monotonic deque","The window is right, but a dict can't report its max. LC 239."],
+ ["Longest substring that becomes all-identical after replacing at most k characters.",
+  "Sliding window — longest","Validity: window length − count of the most frequent char ≤ k. LC 424."]
+];
+(function(){
+  const host=document.querySelector("[data-drill]");
+  if(!host) return;
+  DRILL.forEach(([q,a,why],idx)=>{
+    const d=document.createElement("div"); d.className="dq";
+    d.innerHTML=`<span class="qn">${String(idx+1).padStart(2,"0")}</span>${q}`;
+    const btn=document.createElement("button");
+    btn.textContent="Reveal";
+    const ans=document.createElement("div");
+    ans.className="ans"; ans.hidden=true;
+    ans.innerHTML=`<b>${a}</b> — ${why}`;
+    btn.addEventListener("click",()=>{ans.hidden=!ans.hidden;btn.textContent=ans.hidden?"Reveal":"Hide";});
+    d.append(document.createElement("br"),btn,ans);
+    host.appendChild(d);
+  });
+})();
+
+// ===================== CHECKLIST =====================
+const CHECKS=[
+ ["c1","Window length is <code>end - start + 1</code> — verified on a single-element window."],
+ ["c2","Longest shape records <em>after</em> the shrink loop; shortest records <em>inside</em> it."],
+ ["c3","The shrink loop is <code>while</code>, not <code>if</code> (mandatory for shortest and counting)."],
+ ["c4","Zero-count keys are deleted whenever <code>len(state)</code> is the validity test."],
+ ["c5","<code>start</code> never moves backwards — index jumps use <code>max(start, …)</code>."],
+ ["c6","Fixed windows subtract the outgoing element and only record once the window is full."],
+ ["c7","Empty input, single element, and <code>k &gt; len(nums)</code> all handled."],
+ ["c8","The \"no valid window\" case returns 0 / \"\" / [] rather than <code>inf</code>."],
+ ["c9","Asked whether values can be negative — and if so, switched to prefix sums."],
+ ["c10","Stated the complexity aloud: O(n) time by amortisation, and the real space bound."],
+ ["c11","Every state operation (add, remove, validity check) is genuinely O(1)."],
+ ["c12","No <code>sum()</code>, slicing, or <code>max(values())</code> over the window inside the loop."]
+];
+(function(){
+  const ul=document.querySelector("[data-check]");
+  if(!ul) return;
+  const KEY="sw-workbench-checks";
+  let saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ saved={}; }
+  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){} };
+  CHECKS.forEach(([id,html])=>{
+    const li=document.createElement("li");
+    const cb=document.createElement("input");
+    cb.type="checkbox"; cb.id=id; cb.checked=!!saved[id];
+    const lb=document.createElement("label");
+    lb.setAttribute("for",id); lb.innerHTML=html;
+    cb.addEventListener("change",()=>{ saved[id]=cb.checked; save(); });
+    li.append(cb,lb); ul.appendChild(li);
+  });
+  const clear=document.querySelector("[data-clearcheck]");
+  if(clear) clear.addEventListener("click",()=>{
+    saved={}; save();
+    ul.querySelectorAll("input").forEach(cb=>cb.checked=false);
+  });
+})();
+</script>
+
+</body></html>

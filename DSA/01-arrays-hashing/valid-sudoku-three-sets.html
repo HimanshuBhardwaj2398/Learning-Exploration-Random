@@ -1,0 +1,811 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sudoku in three sets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#eaeef3;
+    --paper:#ffffff;
+    --paper-2:#f5f7fa;
+    --ink:#1b212b;
+    --muted:#5c6675;
+    --faint:#98a2b1;
+    --line:#d7dde5;
+    --line-strong:#333b47;
+    --row:#2f6fed;
+    --col:#c07c07;
+    --box:#7a54d8;
+    --good:#1b9a63;
+    --bad:#dc4436;
+    --row-wash:rgba(47,111,237,.13);
+    --col-wash:rgba(192,124,7,.16);
+    --box-wash:rgba(122,84,216,.13);
+    --good-wash:rgba(27,154,99,.14);
+    --bad-wash:rgba(220,68,54,.15);
+    --shadow:0 1px 2px rgba(20,30,50,.05), 0 10px 30px rgba(20,30,50,.07);
+    --radius:14px;
+    --grid-hue:214;
+    --f-display:'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+    --f-body:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --f-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --bg:#0f1319;
+      --paper:#181d25;
+      --paper-2:#1f252f;
+      --ink:#e7ebf2;
+      --muted:#98a4b4;
+      --faint:#5e6a7a;
+      --line:#2b323d;
+      --line-strong:#c3ccd8;
+      --row:#6fa1ff;
+      --col:#eab24d;
+      --box:#b399f5;
+      --good:#48c78c;
+      --bad:#ff6d5f;
+      --row-wash:rgba(111,161,255,.17);
+      --col-wash:rgba(234,178,77,.15);
+      --box-wash:rgba(179,153,245,.17);
+      --good-wash:rgba(72,199,140,.15);
+      --bad-wash:rgba(255,109,95,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1319;
+    --paper:#181d25;
+    --paper-2:#1f252f;
+    --ink:#e7ebf2;
+    --muted:#98a4b4;
+    --faint:#5e6a7a;
+    --line:#2b323d;
+    --line-strong:#c3ccd8;
+    --row:#6fa1ff;
+    --col:#eab24d;
+    --box:#b399f5;
+    --good:#48c78c;
+    --bad:#ff6d5f;
+    --row-wash:rgba(111,161,255,.17);
+    --col-wash:rgba(234,178,77,.15);
+    --box-wash:rgba(179,153,245,.17);
+    --good-wash:rgba(72,199,140,.15);
+    --bad-wash:rgba(255,109,95,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 34px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(hsla(var(--grid-hue),22%,50%,.045) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(var(--grid-hue),22%,50%,.045) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:16px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px;}
+  .wrap{padding-block:0;}
+
+  /* ---- header ---- */
+  header.top{padding-block:48px 8px;}
+  .eyebrow{
+    font-family:var(--f-mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--box);font-weight:500;margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--f-display);font-weight:700;
+    font-size:clamp(2.2rem,6vw,3.6rem);line-height:1.02;letter-spacing:-.02em;
+    margin:0 0 18px;text-wrap:balance;
+  }
+  .lede{font-size:clamp(1.05rem,2.4vw,1.24rem);color:var(--muted);max-width:60ch;margin:0;}
+  .lede code{color:var(--ink);}
+
+  .themebtn{
+    position:absolute;top:20px;right:20px;
+    font-family:var(--f-mono);font-size:12px;letter-spacing:.04em;
+    background:var(--paper);color:var(--muted);border:1px solid var(--line);
+    padding:7px 12px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .themebtn:hover{color:var(--ink);}
+
+  /* ---- sections ---- */
+  section{padding-block:40px;border-top:1px solid var(--line);margin-top:44px;}
+  section:first-of-type{border-top:none;margin-top:22px;}
+  .kicker{
+    font-family:var(--f-mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 10px;display:flex;align-items:center;gap:10px;
+  }
+  .kicker .num{color:var(--box);font-weight:600;}
+  h2{
+    font-family:var(--f-display);font-weight:600;font-size:clamp(1.5rem,3.6vw,2.1rem);
+    letter-spacing:-.015em;margin:0 0 16px;text-wrap:balance;
+  }
+  .prose{max-width:64ch;}
+  .prose p{margin:0 0 16px;}
+  .prose strong{font-weight:600;}
+  .prose em{font-style:italic;color:var(--ink);}
+  code{font-family:var(--f-mono);font-size:.9em;
+    background:var(--paper-2);border:1px solid var(--line);border-radius:5px;padding:.08em .38em;}
+
+  /* ---- board ---- */
+  .stage{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;margin-top:26px;}
+  .board-col{flex:0 0 auto;width:min(430px,100%);}
+  .side-col{flex:1 1 300px;min-width:270px;}
+  .board{
+    position:relative;width:100%;aspect-ratio:1;
+    background:var(--line-strong);
+    border:2px solid var(--line-strong);border-radius:8px;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .grid{
+    position:absolute;inset:0;display:grid;
+    grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);
+  }
+  .cell{
+    position:relative;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--f-mono);font-weight:500;
+    font-size:clamp(15px,4.4vw,22px);
+    color:var(--ink);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    user-select:none;z-index:1;
+  }
+  .cell.cr{border-right:none;}
+  .cell.cb{border-bottom:none;}
+  .cell.empty{color:transparent;}
+  .cell.upcoming{color:var(--faint);}
+  .cell.placed{color:var(--ink);}
+  .cell.inrow{background:linear-gradient(var(--row-wash),var(--row-wash)), var(--paper);}
+  .cell.incol{background:linear-gradient(var(--col-wash),var(--col-wash)), var(--paper);}
+  .cell.boxmate{background:linear-gradient(var(--box-wash),var(--box-wash)), var(--paper);}
+  .cell.cur{background:var(--row);color:#fff;font-weight:600;}
+  .cell.sel{background:var(--box);color:#fff;font-weight:600;}
+  .cell.curbad{background:var(--bad);color:#fff;font-weight:600;}
+  .cell.match{box-shadow:inset 0 0 0 3px var(--bad);color:var(--bad);font-weight:600;z-index:2;}
+  .clickable .cell{cursor:pointer;}
+  .clickable .cell:hover{outline:2px solid var(--box);outline-offset:-2px;z-index:4;}
+
+  .grid-lines{
+    position:absolute;inset:0;pointer-events:none;z-index:2;
+    background-repeat:no-repeat;
+    background-image:
+      linear-gradient(90deg, transparent calc(33.333% - 1px), var(--line-strong) calc(33.333% - 1px), var(--line-strong) calc(33.333% + 1px), transparent calc(33.333% + 1px)),
+      linear-gradient(90deg, transparent calc(66.666% - 1px), var(--line-strong) calc(66.666% - 1px), var(--line-strong) calc(66.666% + 1px), transparent calc(66.666% + 1px)),
+      linear-gradient(0deg, transparent calc(33.333% - 1px), var(--line-strong) calc(33.333% - 1px), var(--line-strong) calc(33.333% + 1px), transparent calc(33.333% + 1px)),
+      linear-gradient(0deg, transparent calc(66.666% - 1px), var(--line-strong) calc(66.666% - 1px), var(--line-strong) calc(66.666% + 1px), transparent calc(66.666% + 1px));
+  }
+  .box-hi{position:absolute;box-sizing:border-box;pointer-events:none;z-index:3;border:2.5px solid var(--box);border-radius:5px;}
+  .box-hi.q{border-color:var(--good);}
+
+  /* ---- legend ---- */
+  .legend{display:flex;flex-direction:column;gap:12px;}
+  .legend .row{display:flex;align-items:center;gap:12px;}
+  .swatch{width:30px;height:22px;border-radius:5px;flex:0 0 auto;border:1px solid var(--line);}
+  .sw-row{background:var(--row-wash);border-color:var(--row);}
+  .sw-col{background:var(--col-wash);border-color:var(--col);}
+  .sw-box{background:transparent;border:2.5px solid var(--box);}
+  .legend .lab{font-weight:500;}
+  .legend .lab span{color:var(--muted);font-weight:400;font-size:.92em;}
+
+  /* ---- readout / box explorer ---- */
+  .readout{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;box-shadow:var(--shadow);
+  }
+  .formula{
+    font-family:var(--f-mono);font-size:clamp(15px,3.2vw,19px);line-height:1.9;
+    margin:0 0 6px;word-spacing:.02em;
+  }
+  .formula .r{color:var(--row);font-weight:600;}
+  .formula .c{color:var(--col);font-weight:600;}
+  .formula .b{color:var(--box);font-weight:600;}
+  .formula .op{color:var(--faint);}
+  .hint{color:var(--muted);font-size:.92rem;margin:12px 0 0;}
+
+  .buckets{margin-top:18px;display:flex;flex-direction:column;gap:14px;}
+  .bucket .btitle{font-family:var(--f-mono);font-size:12px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px;}
+  .brow{display:grid;grid-template-columns:auto repeat(9,1fr);gap:3px;align-items:center;}
+  .brow .rlab{font-family:var(--f-mono);font-size:11px;color:var(--faint);padding-right:6px;white-space:nowrap;text-align:right;}
+  .bcell{
+    font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:center;
+    font-size:14px;padding:5px 0;border-radius:5px;background:var(--paper-2);color:var(--muted);
+  }
+  .bcell.idx{color:var(--ink);}
+  .bcell.grp0{background:var(--box-wash);}
+  .bcell.on{background:var(--box);color:#fff;font-weight:600;}
+  .brow.divider .bcell{background:transparent;color:var(--faint);font-size:11px;padding:1px 0;}
+
+  /* ---- scanner ---- */
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+  .chip{
+    font-family:var(--f-mono);font-size:12.5px;letter-spacing:.02em;
+    background:var(--paper);color:var(--muted);border:1px solid var(--line);
+    padding:8px 13px;border-radius:999px;cursor:pointer;transition:none;
+  }
+  .chip:hover{color:var(--ink);border-color:var(--faint);}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+
+  .verdict{
+    display:flex;align-items:center;gap:12px;min-height:30px;
+    font-size:1.02rem;margin:0 0 18px;font-weight:500;
+  }
+  .verdict .tag{
+    font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:4px 10px;border-radius:6px;font-weight:600;
+  }
+  .verdict.scan .tag{background:var(--row-wash);color:var(--row);}
+  .verdict.good .tag{background:var(--good-wash);color:var(--good);}
+  .verdict.bad .tag{background:var(--bad-wash);color:var(--bad);}
+  .verdict .txt{color:var(--muted);font-weight:400;}
+  .verdict .txt b{color:var(--ink);font-weight:600;}
+
+  .panels{display:flex;flex-direction:column;gap:12px;}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 15px;}
+  .panel .phead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .panel .pname{font-family:var(--f-mono);font-size:12.5px;font-weight:600;}
+  .panel.r .pname{color:var(--row);}
+  .panel.c .pname{color:var(--col);}
+  .panel.b .pname{color:var(--box);}
+  .panel .pnote{font-size:11.5px;color:var(--faint);font-family:var(--f-mono);}
+  .digits{display:flex;gap:5px;flex-wrap:wrap;}
+  .dg{
+    width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;
+    background:var(--paper-2);color:var(--faint);border:1px solid var(--line);
+  }
+  .dg.has{color:#fff;border-color:transparent;}
+  .panel.r .dg.has{background:var(--row);}
+  .panel.c .dg.has{background:var(--col);}
+  .panel.b .dg.has{background:var(--box);}
+  .dg.adding{border:2px dashed var(--good);color:var(--good);background:var(--good-wash);font-weight:600;}
+  .dg.clash{background:var(--bad);color:#fff;border-color:transparent;font-weight:700;animation:pop .3s ease;}
+  @keyframes pop{from{transform:scale(1.35)}to{transform:scale(1)}}
+
+  .controls{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--f-mono);font-size:13px;
+    background:var(--paper);color:var(--ink);border:1px solid var(--line);
+    padding:9px 15px;border-radius:9px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .btn:hover{border-color:var(--faint);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  .btn.primary{background:var(--box);color:#fff;border-color:var(--box);}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .progress{font-family:var(--f-mono);font-size:12px;color:var(--muted);align-self:center;margin-left:4px;}
+
+  /* ---- code ---- */
+  .code{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow-x:auto;box-shadow:var(--shadow);margin-top:20px;
+  }
+  .code pre{margin:0;font-family:var(--f-mono);font-size:13px;line-height:1.7;}
+  .code .ln{display:block;padding:1px 8px;margin:0 -8px;border-radius:4px;color:var(--ink);}
+  .code .ln.dim{color:var(--faint);}
+  .code .cmt{color:var(--faint);font-style:italic;}
+  .code .kw{color:var(--box);}
+  .code .fn{color:var(--row);}
+  .code .lit{color:var(--col);}
+  .code .hl-row{background:var(--row-wash);box-shadow:inset 3px 0 0 var(--row);}
+  .code .hl-col{background:var(--col-wash);box-shadow:inset 3px 0 0 var(--col);}
+  .code .hl-box{background:var(--box-wash);box-shadow:inset 3px 0 0 var(--box);}
+  .code .hl-good{background:var(--good-wash);box-shadow:inset 3px 0 0 var(--good);}
+  .code .hl-bad{background:var(--bad-wash);box-shadow:inset 3px 0 0 var(--bad);}
+
+  .takeaways{display:flex;flex-direction:column;gap:14px;margin-top:8px;}
+  .take{display:flex;gap:14px;align-items:flex-start;}
+  .take .mk{font-family:var(--f-mono);color:var(--box);font-weight:600;flex:0 0 auto;padding-top:1px;}
+  .take p{margin:0;}
+  .take code{white-space:nowrap;}
+
+  footer.foot{padding:34px 0 60px;color:var(--faint);font-size:13px;font-family:var(--f-mono);}
+
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+  @media (max-width:560px){
+    .side-col{min-width:0;}
+    .brow{grid-template-columns:auto repeat(9,1fr);}
+  }
+</style>
+
+<button class="themebtn" id="themeBtn" aria-label="Toggle color theme">theme: auto</button>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Valid Sudoku · the elegant version</p>
+    <h1>Sudoku in three sets</h1>
+    <p class="lede">The whole check is one question asked three times — <em>have I seen this digit here before?</em> The only trick worth learning is how <code>(r // 3, c // 3)</code> turns a cell into its box.</p>
+  </header>
+
+  <!-- SECTION 1 -->
+  <section>
+    <p class="kicker"><span class="num">01</span> One rule, three times</p>
+    <h2>Three constraints, three families of sets</h2>
+    <div class="prose">
+      <p>A board is valid when no digit repeats inside a <strong style="color:var(--row)">row</strong>, inside a <strong style="color:var(--col)">column</strong>, or inside a <strong style="color:var(--box)">3&times;3 box</strong>. That&rsquo;s the same question three ways: <em>have I already placed this digit in this unit?</em></p>
+      <p>&ldquo;Have I seen it?&rdquo; is exactly what a <strong>set</strong> answers in O(1). So you keep three families of sets — one per row, one per column, one per box. Every filled cell checks in against its three sets, then signs the register. The <em>first</em> collision anywhere means invalid; get to the last cell clean and it&rsquo;s valid.</p>
+    </div>
+    <div class="stage">
+      <div class="board-col">
+        <div class="board"><div class="grid" id="legendGrid"></div></div>
+      </div>
+      <div class="side-col">
+        <div class="readout">
+          <div class="legend">
+            <div class="row"><span class="swatch sw-row"></span><span class="lab">Row set <span>— one per row, keyed by <code>r</code></span></span></div>
+            <div class="row"><span class="swatch sw-col"></span><span class="lab">Column set <span>— one per column, keyed by <code>c</code></span></span></div>
+            <div class="row"><span class="swatch sw-box"></span><span class="lab">Box set <span>— one per 3&times;3 block, keyed by <code>(r//3, c//3)</code></span></span></div>
+          </div>
+          <p class="hint">Every cell lives at the crossing of exactly one row, one column, and one box — so each digit is checked against precisely three sets, no matter where it sits.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section>
+    <p class="kicker"><span class="num">02</span> The box trick</p>
+    <h2>Turning a cell into its box</h2>
+    <div class="prose">
+      <p>A cell&rsquo;s row and column are just <code>r</code> and <code>c</code> — no work. The box needs one small move. Picture the nine boxes as their own 3&times;3 grid: <strong>box-row</strong> 0/1/2 top to bottom, <strong>box-col</strong> 0/1/2 left to right.</p>
+      <p>Rows 0,1,2 all live in box-row 0; rows 3,4,5 in box-row 1; rows 6,7,8 in box-row 2. That <em>grouping-by-threes</em> is precisely what integer division does: <code>r // 3</code>. Same for columns with <code>c // 3</code>. So a cell&rsquo;s box is the pair <code>(r // 3, c // 3)</code> — nine possible pairs, one per box.</p>
+      <p><strong>Click any cell</strong> to watch its coordinates collapse into a box.</p>
+    </div>
+    <div class="stage">
+      <div class="board-col">
+        <div class="board clickable"><div class="grid" id="exploreGrid"></div></div>
+      </div>
+      <div class="side-col">
+        <div class="readout">
+          <p class="formula" id="fRow"></p>
+          <p class="formula" id="fCol"></p>
+          <p class="formula" id="fBox"></p>
+          <div class="buckets">
+            <div class="bucket">
+              <div class="btitle">rows &rarr; box-row</div>
+              <div class="brow" id="bucketR"></div>
+              <div class="brow divider" id="bucketRd"></div>
+            </div>
+            <div class="bucket">
+              <div class="btitle">columns &rarr; box-col</div>
+              <div class="brow" id="bucketC"></div>
+              <div class="brow divider" id="bucketCd"></div>
+            </div>
+          </div>
+          <p class="hint"><code>i // k</code> is the general &ldquo;which bucket of size k&rdquo; move — spot it and grid problems get much friendlier. Prefer a single number? <code>3*(r//3) + c//3</code> gives box <code>0&ndash;8</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section>
+    <p class="kicker"><span class="num">03</span> Watch the scan</p>
+    <h2>One pass, three checks per cell</h2>
+    <div class="prose">
+      <p>Sweep top-left to bottom-right, skipping blanks. For each digit, look in its row, column, and box sets. Already there? Stop — invalid. Otherwise add it to all three and move on. The valid board runs clean; each clash board trips a <em>different</em> one of the three checks — watch which set flashes red.</p>
+    </div>
+
+    <div class="presets" id="presets">
+      <button class="chip" data-key="valid">valid board</button>
+      <button class="chip" data-key="row">row clash</button>
+      <button class="chip" data-key="col">column clash</button>
+      <button class="chip" data-key="box">box clash</button>
+    </div>
+
+    <div class="verdict scan" id="verdict">
+      <span class="tag">scanning</span><span class="txt" id="verdictTxt"></span>
+    </div>
+
+    <div class="stage">
+      <div class="board-col">
+        <div class="board"><div class="grid" id="scanGrid"></div></div>
+        <div class="controls">
+          <button class="btn" id="btnReset">&#8634; reset</button>
+          <button class="btn" id="btnBack">&larr; back</button>
+          <button class="btn primary" id="btnStep">step &rarr;</button>
+          <button class="btn" id="btnPlay">&#9654; play</button>
+          <span class="progress" id="progress"></span>
+        </div>
+      </div>
+      <div class="side-col">
+        <div class="panels" id="panels">
+          <div class="panel r"><div class="phead"><span class="pname" id="pnR">row</span><span class="pnote">rows[r]</span></div><div class="digits" id="dgR"></div></div>
+          <div class="panel c"><div class="phead"><span class="pname" id="pnC">col</span><span class="pnote">cols[c]</span></div><div class="digits" id="dgC"></div></div>
+          <div class="panel b"><div class="phead"><span class="pname" id="pnB">box</span><span class="pnote">boxes[(r//3,c//3)]</span></div><div class="digits" id="dgB"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code" id="codeBox">
+      <pre id="codePre"></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section>
+    <p class="kicker"><span class="num">04</span> Carry these</p>
+    <h2>What makes it elegant</h2>
+    <div class="takeaways prose">
+      <div class="take"><span class="mk">01</span><p>Three constraints reduce to <strong>one primitive</strong>: &ldquo;seen before in this unit?&rdquo; A <code>set</code> answers that in O(1) and says what you mean — reach for it over a counter you compare against 1.</p></div>
+      <div class="take"><span class="mk">02</span><p>Give each unit its <strong>own</strong> state. A cell (r, c) belongs to row <code>r</code>, column <code>c</code>, and box <code>(r//3, c//3)</code> — three keys, three sets it checks into.</p></div>
+      <div class="take"><span class="mk">03</span><p>Floor division is the <strong>bucketing</strong> move: <code>i // k</code> collapses fine coordinates into groups of <code>k</code>. The same trick tiles up in grids, pagination, time buckets, and sharding.</p></div>
+      <div class="take"><span class="mk">04</span><p>One pass, <strong>bail on first conflict</strong> — no need to count everything and inspect totals afterward. O(81) time, O(81) space, done.</p></div>
+    </div>
+  </section>
+
+  <footer class="foot">rows &middot; columns &middot; boxes — one membership test, three keys.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var BASE = ["53..7....","6..195...",".98....6.","8...6...3","4..8.3..1","7...2...6",".6....28.","...419..5","....8..79"];
+  function toGrid(rows){ return rows.map(function(r){ return r.split(""); }); }
+  function clone(g){ return g.map(function(r){ return r.slice(); }); }
+
+  var validG = toGrid(BASE);
+  var rowG = clone(validG); rowG[0][8] = "7";   // 7 twice in row 0 (cols 4 & 8), different boxes
+  var colG = clone(validG); colG[3][0] = "5";   // 5 twice in column 0 (rows 0 & 3), different boxes
+  var boxG = clone(validG); boxG[2][2] = "5";   // 5 twice in top-left box, different row & col
+  var BOARDS = { valid:validG, row:rowG, col:colG, box:boxG };
+
+  /* ---------- generic board builder ---------- */
+  function buildGrid(gridEl, opts){
+    opts = opts || {};
+    gridEl.innerHTML = "";
+    var cells = [];
+    for(var r=0;r<9;r++){
+      for(var c=0;c<9;c++){
+        var d = document.createElement("div");
+        d.className = "cell" + (c===8?" cr":"") + (r===8?" cb":"");
+        d.dataset.r = r; d.dataset.c = c;
+        gridEl.appendChild(d);
+        cells.push(d);
+      }
+    }
+    var lines = document.createElement("div");
+    lines.className = "grid-lines";
+    gridEl.appendChild(lines);
+    var boxhi = null;
+    if(opts.boxHighlight){
+      boxhi = document.createElement("div");
+      boxhi.className = "box-hi";
+      boxhi.style.display = "none";
+      gridEl.appendChild(boxhi);
+    }
+    return { cells:cells, at:function(r,c){ return cells[r*9+c]; }, boxhi:boxhi };
+  }
+  function placeBox(boxhi, br, bc, good){
+    boxhi.style.display = "block";
+    boxhi.style.left = "calc(" + (bc*100/3) + "% + 2px)";
+    boxhi.style.top = "calc(" + (br*100/3) + "% + 2px)";
+    boxhi.style.width = "calc(33.3333% - 4px)";
+    boxhi.style.height = "calc(33.3333% - 4px)";
+    boxhi.className = "box-hi" + (good ? " q" : "");
+  }
+  function clearCells(cells){
+    for(var i=0;i<cells.length;i++){
+      cells[i].className = "cell" + ((i%9)===8?" cr":"") + (Math.floor(i/9)===8?" cb":"");
+      cells[i].textContent = "";
+    }
+  }
+
+  /* ---------- Section 1: legend board ---------- */
+  (function(){
+    var g = buildGrid(document.getElementById("legendGrid"), { boxHighlight:true });
+    var R=1, C=7, BR=2, BC=0;
+    for(var r=0;r<9;r++) for(var c=0;c<9;c++){
+      var cell = g.at(r,c);
+      var v = validG[r][c];
+      cell.textContent = v==="."?"":v;
+      if(v===".") cell.classList.add("empty");
+      var inBox = (Math.floor(r/3)===BR && Math.floor(c/3)===BC);
+      if(r===R && c!==C && !inBox) cell.classList.add("inrow");
+      else if(c===C && r!==R && !inBox) cell.classList.add("incol");
+      else if(inBox) cell.classList.add("boxmate");
+      if(r===R && c===C) cell.classList.add("inrow");
+    }
+    placeBox(g.boxhi, BR, BC, false);
+  })();
+
+  /* ---------- Section 2: box explorer ---------- */
+  (function(){
+    var g = buildGrid(document.getElementById("exploreGrid"), { boxHighlight:true });
+    var sel = { r:5, c:3 };
+    var fRow=document.getElementById("fRow"), fCol=document.getElementById("fCol"), fBox=document.getElementById("fBox");
+    var bR=document.getElementById("bucketR"), bRd=document.getElementById("bucketRd");
+    var bC=document.getElementById("bucketC"), bCd=document.getElementById("bucketCd");
+
+    function bucketRow(container, dividerRow, labelTop, labelBot, active){
+      container.innerHTML=""; dividerRow.innerHTML="";
+      var t=document.createElement("div"); t.className="rlab"; t.textContent=labelTop; container.appendChild(t);
+      for(var i=0;i<9;i++){
+        var cell=document.createElement("div");
+        cell.className="bcell idx"+(i===active?" on":"");
+        cell.textContent=i; container.appendChild(cell);
+      }
+      var t2=document.createElement("div"); t2.className="rlab"; t2.textContent=labelBot; dividerRow.appendChild(t2);
+      for(var j=0;j<9;j++){
+        var g2=Math.floor(j/3);
+        var cell2=document.createElement("div");
+        cell2.className="bcell"+(j===active?" on":(g2===Math.floor(active/3)?" grp0":""));
+        cell2.textContent=g2; dividerRow.appendChild(cell2);
+      }
+    }
+
+    function render(){
+      clearCells(g.cells);
+      var br=Math.floor(sel.r/3), bc=Math.floor(sel.c/3);
+      for(var r=0;r<9;r++) for(var c=0;c<9;c++){
+        var cell=g.at(r,c);
+        var v=validG[r][c];
+        cell.textContent = v==="."?"":v;
+        if(v===".") cell.classList.add("empty");
+        var inBox=(Math.floor(r/3)===br && Math.floor(c/3)===bc);
+        if(r===sel.r && c===sel.c) cell.classList.add("sel");
+        else if(inBox) cell.classList.add("boxmate");
+      }
+      placeBox(g.boxhi, br, bc, false);
+      fRow.innerHTML = 'row&nbsp;&nbsp;&nbsp;= <span class="r">'+sel.r+'</span>';
+      fCol.innerHTML = 'col&nbsp;&nbsp;&nbsp;= <span class="c">'+sel.c+'</span>';
+      fBox.innerHTML = 'box&nbsp;&nbsp;= ( <span class="r">'+sel.r+'</span> <span class="op">//</span> 3 , <span class="c">'+sel.c+'</span> <span class="op">//</span> 3 ) = ( <span class="b">'+br+'</span> , <span class="b">'+bc+'</span> )';
+      bucketRow(bR,bRd,"r","r // 3",sel.r);
+      bucketRow(bC,bCd,"c","c // 3",sel.c);
+    }
+    g.cells.forEach(function(cell){
+      cell.addEventListener("click", function(){
+        sel = { r:+cell.dataset.r, c:+cell.dataset.c };
+        render();
+      });
+    });
+    render();
+  })();
+
+  /* ---------- Section 3: scanner ---------- */
+  (function(){
+    var g = buildGrid(document.getElementById("scanGrid"), { boxHighlight:true });
+    var state = { key:"valid", step:7, timer:null };
+
+    function filledOf(grid){
+      var list=[];
+      for(var r=0;r<9;r++) for(var c=0;c<9;c++){
+        if(grid[r][c]!=="."){ list.push({r:r,c:c,v:grid[r][c],br:Math.floor(r/3),bc:Math.floor(c/3)}); }
+      }
+      return list;
+    }
+    // analyse a board: build sets progressively, find first conflict
+    function analyse(grid){
+      var filled=filledOf(grid);
+      var rows={},cols={},boxes={};
+      for(var i=0;i<10;i++){ rows[i]=new Set(); cols[i]=new Set(); }
+      var conflict=null;
+      for(var k=0;k<filled.length;k++){
+        var f=filled[k], bkey=f.br+","+f.bc;
+        if(!boxes[bkey]) boxes[bkey]=new Set();
+        var channel=null, matchIdx=-1;
+        if(rows[f.r].has(f.v)) channel="row";
+        else if(cols[f.c].has(f.v)) channel="col";
+        else if(boxes[bkey].has(f.v)) channel="box";
+        if(channel){
+          for(var j=0;j<k;j++){
+            var p=filled[j];
+            if(channel==="row"&&p.r===f.r&&p.v===f.v){matchIdx=j;break;}
+            if(channel==="col"&&p.c===f.c&&p.v===f.v){matchIdx=j;break;}
+            if(channel==="box"&&p.br===f.br&&p.bc===f.bc&&p.v===f.v){matchIdx=j;break;}
+          }
+          conflict={index:k,channel:channel,matchIdx:matchIdx};
+          break;
+        }
+        rows[f.r].add(f.v); cols[f.c].add(f.v); boxes[bkey].add(f.v);
+      }
+      return { filled:filled, conflict:conflict };
+    }
+
+    function setsUpTo(filled, upto){
+      var rows={},cols={},boxes={};
+      for(var i=0;i<9;i++){ rows[i]=new Set(); cols[i]=new Set(); }
+      for(var k=0;k<upto;k++){
+        var f=filled[k], bkey=f.br+","+f.bc;
+        if(!boxes[bkey]) boxes[bkey]=new Set();
+        rows[f.r].add(f.v); cols[f.c].add(f.v); boxes[bkey].add(f.v);
+      }
+      return { rows:rows, cols:cols, boxes:boxes };
+    }
+
+    function maxStep(a){ return a.conflict ? a.conflict.index : a.filled.length; }
+
+    function renderDigits(el, set, cur, willAdd, isClash){
+      el.innerHTML="";
+      for(var d=1; d<=9; d++){
+        var s=String(d);
+        var chip=document.createElement("div");
+        chip.className="dg";
+        chip.textContent=s;
+        if(set && set.has(s)) chip.classList.add("has");
+        if(cur===s){
+          if(isClash) chip.classList.add("clash");
+          else if(willAdd) chip.classList.add("adding");
+        }
+        el.appendChild(chip);
+      }
+    }
+
+    var CODE = [
+      {t:'<span class="kw">from</span> collections <span class="kw">import</span> defaultdict', h:[]},
+      {t:'', h:[]},
+      {t:'<span class="kw">def</span> <span class="fn">isValidSudoku</span>(board):', h:[]},
+      {t:'    rows  = defaultdict(<span class="fn">set</span>)', h:[]},
+      {t:'    cols  = defaultdict(<span class="fn">set</span>)', h:[]},
+      {t:'    boxes = defaultdict(<span class="fn">set</span>)          <span class="cmt"># key = (r//3, c//3)</span>', h:['box']},
+      {t:'    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="lit">9</span>):', h:[]},
+      {t:'        <span class="kw">for</span> c <span class="kw">in</span> <span class="fn">range</span>(<span class="lit">9</span>):', h:[]},
+      {t:'            v = board[r][c]', h:['scan']},
+      {t:'            <span class="kw">if</span> v == <span class="lit">"."</span>: <span class="kw">continue</span>', h:[]},
+      {t:'            b = (r // <span class="lit">3</span>, c // <span class="lit">3</span>)', h:['box']},
+      {t:'            <span class="kw">if</span> v <span class="kw">in</span> rows[r] <span class="kw">or</span> v <span class="kw">in</span> cols[c] <span class="kw">or</span> v <span class="kw">in</span> boxes[b]:', h:['check']},
+      {t:'                <span class="kw">return</span> <span class="lit">False</span>', h:['false']},
+      {t:'            rows[r].add(v)', h:['addrow']},
+      {t:'            cols[c].add(v)', h:['addcol']},
+      {t:'            boxes[b].add(v)', h:['addbox']},
+      {t:'    <span class="kw">return</span> <span class="lit">True</span>', h:['true']},
+    ];
+    var codePre=document.getElementById("codePre");
+    function renderCode(active){
+      var html="";
+      for(var i=0;i<CODE.length;i++){
+        var line=CODE[i], cls="ln";
+        var dim = active.indexOf("dimAll")>=0;
+        var tag="";
+        if(active.indexOf("scanline")>=0 && line.h.indexOf("scan")>=0) tag="hl-row";
+        if(active.indexOf("boxline")>=0 && line.h.indexOf("box")>=0) tag="hl-box";
+        if(active.indexOf("checkline")>=0 && line.h.indexOf("check")>=0) tag="hl-row";
+        if(active.indexOf("addlines")>=0 && (line.h.indexOf("addrow")>=0)) tag="hl-row";
+        if(active.indexOf("addlines")>=0 && (line.h.indexOf("addcol")>=0)) tag="hl-col";
+        if(active.indexOf("addlines")>=0 && (line.h.indexOf("addbox")>=0)) tag="hl-box";
+        if(active.indexOf("falseline")>=0 && line.h.indexOf("false")>=0) tag="hl-bad";
+        if(active.indexOf("falseline")>=0 && line.h.indexOf("check")>=0) tag="hl-bad";
+        if(active.indexOf("trueline")>=0 && line.h.indexOf("true")>=0) tag="hl-good";
+        html += '<span class="'+cls+(tag?" "+tag:"")+'">'+(line.t||"&nbsp;")+'</span>';
+      }
+      codePre.innerHTML=html;
+    }
+
+    var verdict=document.getElementById("verdict"), verdictTxt=document.getElementById("verdictTxt");
+    var pnR=document.getElementById("pnR"),pnC=document.getElementById("pnC"),pnB=document.getElementById("pnB");
+    var dgR=document.getElementById("dgR"),dgC=document.getElementById("dgC"),dgB=document.getElementById("dgB");
+    var progress=document.getElementById("progress");
+    var btnStep=document.getElementById("btnStep"),btnBack=document.getElementById("btnBack"),
+        btnReset=document.getElementById("btnReset"),btnPlay=document.getElementById("btnPlay");
+
+    function render(){
+      var grid=BOARDS[state.key];
+      var a=analyse(grid);
+      var filled=a.filled, conflict=a.conflict, mx=maxStep(a);
+      if(state.step>mx) state.step=mx;
+      if(state.step<0) state.step=0;
+
+      clearCells(g.cells);
+      // draw all digits with placed / upcoming styling
+      var placedKeys={};
+      for(var k=0;k<state.step;k++){ placedKeys[filled[k].r+","+filled[k].c]=true; }
+      for(var r=0;r<9;r++) for(var c=0;c<9;c++){
+        var cell=g.at(r,c), v=grid[r][c];
+        cell.textContent = v==="."?"":v;
+        if(v==="."){ cell.classList.add("empty"); }
+        else if(placedKeys[r+","+c]) cell.classList.add("placed");
+        else cell.classList.add("upcoming");
+      }
+
+      var atConflict = conflict && state.step===conflict.index;
+      var done = !conflict && state.step===filled.length;
+      var sets = setsUpTo(filled, state.step);
+
+      if(done){
+        g.boxhi.style.display="none";
+        verdict.className="verdict good";
+        verdict.querySelector(".tag").textContent="valid";
+        verdictTxt.innerHTML="All "+filled.length+" filled cells scanned, no repeats in any row, column, or box &rarr; <b>return True</b>";
+        pnR.textContent="row"; pnC.textContent="col"; pnB.textContent="box";
+        renderDigits(dgR,null,null,false,false);
+        renderDigits(dgC,null,null,false,false);
+        renderDigits(dgB,null,null,false,false);
+        renderCode(["trueline"]);
+      } else {
+        var cur=filled[state.step];
+        var br=cur.br, bc=cur.bc, bkey=br+","+bc;
+        // washes for current row / column (except current cell)
+        for(var cc=0;cc<9;cc++){ if(cc!==cur.c) g.at(cur.r,cc).classList.add("inrow"); }
+        for(var rr=0;rr<9;rr++){ if(rr!==cur.r) g.at(rr,cur.c).classList.add("incol"); }
+        placeBox(g.boxhi, br, bc, !atConflict);
+
+        var rowHas=sets.rows[cur.r].has(cur.v);
+        var colHas=sets.cols[cur.c].has(cur.v);
+        var boxHas=sets.boxes[bkey]?sets.boxes[bkey].has(cur.v):false;
+
+        if(atConflict){
+          g.at(cur.r,cur.c).classList.add("curbad");
+          if(conflict.matchIdx>=0){
+            var m=filled[conflict.matchIdx];
+            g.at(m.r,m.c).classList.add("match");
+          }
+          verdict.className="verdict bad";
+          verdict.querySelector(".tag").textContent="invalid";
+          var chName={row:"row "+cur.r,col:"column "+cur.c,box:"box ("+br+","+bc+")"}[conflict.channel];
+          verdictTxt.innerHTML="<b>"+cur.v+"</b> is already in "+chName+" &rarr; <b>return False</b>";
+          renderCode(["falseline"]);
+        } else {
+          g.at(cur.r,cur.c).classList.add("cur");
+          verdict.className="verdict scan";
+          verdict.querySelector(".tag").textContent="scanning";
+          verdictTxt.innerHTML="cell (<b>"+cur.r+"</b>, <b>"+cur.c+"</b>) = <b>"+cur.v+"</b> &mdash; box ("+br+","+bc+"). Not seen in its row, column, or box &rarr; add to all three.";
+          renderCode(["addlines"]);
+        }
+
+        pnR.textContent="row "+cur.r;
+        pnC.textContent="col "+cur.c;
+        pnB.textContent="box ("+br+","+bc+")";
+        renderDigits(dgR, sets.rows[cur.r], cur.v, !atConflict, atConflict&&conflict.channel==="row");
+        renderDigits(dgC, sets.cols[cur.c], cur.v, !atConflict, atConflict&&conflict.channel==="col");
+        renderDigits(dgB, sets.boxes[bkey]||new Set(), cur.v, !atConflict, atConflict&&conflict.channel==="box");
+      }
+
+      progress.textContent = (done? filled.length : state.step) + " / " + filled.length + " cells";
+      btnBack.disabled = state.step<=0;
+      btnStep.disabled = state.step>=mx;
+      if(state.step>=mx && state.timer){ stopPlay(); }
+    }
+
+    function stopPlay(){ if(state.timer){ clearInterval(state.timer); state.timer=null; btnPlay.innerHTML="&#9654; play"; } }
+    function step(delta){ stopPlayIfManual(delta); state.step+=delta; render(); }
+    function stopPlayIfManual(){ /* manual back/step keeps play running only via timer */ }
+
+    btnStep.addEventListener("click", function(){ stopPlay(); state.step++; render(); });
+    btnBack.addEventListener("click", function(){ stopPlay(); state.step--; render(); });
+    btnReset.addEventListener("click", function(){ stopPlay(); state.step=0; render(); });
+    btnPlay.addEventListener("click", function(){
+      if(state.timer){ stopPlay(); return; }
+      var a=analyse(BOARDS[state.key]);
+      if(state.step>=maxStep(a)) state.step=0;
+      btnPlay.innerHTML="&#10073;&#10073; pause";
+      state.timer=setInterval(function(){
+        var aa=analyse(BOARDS[state.key]);
+        if(state.step>=maxStep(aa)){ stopPlay(); render(); return; }
+        state.step++; render();
+      }, 650);
+      render();
+    });
+
+    var presetBtns=document.querySelectorAll("#presets .chip");
+    presetBtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        stopPlay();
+        state.key=b.dataset.key; state.step=0;
+        presetBtns.forEach(function(x){ x.setAttribute("aria-pressed", x===b?"true":"false"); });
+        render();
+      });
+      if(b.dataset.key===state.key) b.setAttribute("aria-pressed","true");
+    });
+
+    render();
+  })();
+
+  /* ---------- theme toggle ---------- */
+  (function(){
+    var btn=document.getElementById("themeBtn");
+    var modes=["auto","light","dark"], i=0;
+    btn.addEventListener("click", function(){
+      i=(i+1)%3; var m=modes[i];
+      if(m==="auto") document.documentElement.removeAttribute("data-theme");
+      else document.documentElement.setAttribute("data-theme", m);
+      btn.textContent="theme: "+m;
+    });
+  })();
+})();
+</script>
+
+</body></html>

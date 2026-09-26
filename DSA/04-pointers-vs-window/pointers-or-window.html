@@ -1,0 +1,887 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pointers or Window?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<style>
+:root{
+  --ground:#f4f5f2; --surface:#ffffff; --surface-2:#eceeea; --surface-3:#e2e6e1;
+  --ink:#18201d; --ink-2:#4a5651; --ink-3:#77837d;
+  --line:#dde2dd; --line-2:#c5cdc7;
+  --tp:#2d57a8; --tp-ink:#1f4388; --tp-soft:#e4ebf8; --on-tp:#ffffff;
+  --sw:#a4570a; --sw-ink:#8a4a08; --sw-soft:#f8eada; --on-sw:#ffffff;
+  --ot:#5d5a86; --ot-ink:#48456f; --ot-soft:#ebeaf4;
+  --good:#0f6b52; --good-soft:#dfefe8; --on-good:#ffffff;
+  --bad:#b0302a; --bad-soft:#fae7e4;
+  --junk:#9aa39e;
+  --shadow:0 1px 2px rgba(24,32,29,.05),0 8px 22px -14px rgba(24,32,29,.22);
+  --f-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0e1412; --surface:#151d1a; --surface-2:#1c2622; --surface-3:#24302b;
+    --ink:#e7eeea; --ink-2:#a7b4ae; --ink-3:#7e8b85;
+    --line:#27322e; --line-2:#35423c;
+    --tp:#86a9f2; --tp-ink:#abc3f6; --tp-soft:#1a2641; --on-tp:#0e1412;
+    --sw:#e9a55a; --sw-ink:#f2c08a; --sw-soft:#34250f; --on-sw:#0e1412;
+    --ot:#b5b1e6; --ot-ink:#cfccf1; --ot-soft:#25233a;
+    --good:#5ad0a6; --good-soft:#12302a; --on-good:#0e1412;
+    --bad:#f2968d; --bad-soft:#3b1f1c;
+    --junk:#5f6a65;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0e1412; --surface:#151d1a; --surface-2:#1c2622; --surface-3:#24302b;
+  --ink:#e7eeea; --ink-2:#a7b4ae; --ink-3:#7e8b85;
+  --line:#27322e; --line-2:#35423c;
+  --tp:#86a9f2; --tp-ink:#abc3f6; --tp-soft:#1a2641; --on-tp:#0e1412;
+  --sw:#e9a55a; --sw-ink:#f2c08a; --sw-soft:#34250f; --on-sw:#0e1412;
+  --ot:#b5b1e6; --ot-ink:#cfccf1; --ot-soft:#25233a;
+  --good:#5ad0a6; --good-soft:#12302a; --on-good:#0e1412;
+  --bad:#f2968d; --bad-soft:#3b1f1c;
+  --junk:#5f6a65;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.62;
+  padding-inline:20px;padding-block:0 64px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto}
+.measure{max-width:68ch}
+h1,h2{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h3{font-family:var(--f-body);font-weight:600;font-size:17px;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--tp-ink);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .34em;border-radius:3px;color:var(--ink)}
+.kicker{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.tp-t{color:var(--tp-ink);font-weight:600}
+.sw-t{color:var(--sw-ink);font-weight:600}
+:focus-visible{outline:2px solid var(--tp);outline-offset:2px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:center;padding-block:56px 36px}
+.hero h1{font-size:clamp(40px,6vw,64px);line-height:1.02;margin-top:14px}
+.hero h1 .amp{font-style:italic;color:var(--ink-3);font-weight:400}
+.hero .lead{font-size:18.5px;color:var(--ink-2);margin-top:18px;max-width:40ch}
+.answer{margin-top:24px;display:grid;gap:10px}
+.answer div{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;font-size:15.5px}
+.tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap;font-weight:500}
+.tag.tp{background:var(--tp-soft);color:var(--tp-ink)}
+.tag.sw{background:var(--sw-soft);color:var(--sw-ink)}
+.tag.ot{background:var(--ot-soft);color:var(--ot-ink)}
+.tag.good{background:var(--good-soft);color:var(--good)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.hero-fig{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;box-shadow:var(--shadow)}
+.hero-fig svg{display:block;width:100%;height:auto;max-width:100%}
+.hero-fig figcaption{font-size:13.5px;color:var(--ink-2);margin-top:10px;line-height:1.5}
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;padding-block:14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.toc a{color:var(--ink-2);text-decoration:none}
+.toc a:hover{color:var(--ink);text-decoration:underline}
+.toc b{font-family:var(--f-mono);font-weight:500;color:var(--ink-3);margin-right:6px;font-size:12px}
+
+/* ---------- sections ---------- */
+section{padding-block:60px 8px}
+.sec-head{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:baseline;margin-bottom:18px}
+.sec-n{font-family:var(--f-mono);font-size:13px;color:var(--ink-3);border:1px solid var(--line-2);border-radius:99px;
+  width:30px;height:30px;display:grid;place-items:center;align-self:center}
+.sec-head h2{font-size:clamp(26px,3.4vw,34px);line-height:1.12}
+.sec-head .sub{grid-column:2;color:var(--ink-3);font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.prose{display:grid;gap:14px;color:var(--ink);max-width:68ch}
+.prose p{color:var(--ink-2)}
+.prose strong{color:var(--ink)}
+
+/* ---------- panels ---------- */
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:26px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;align-content:start;
+  box-shadow:var(--shadow);min-width:0}
+.panel[data-fam="tp"]{--p:var(--tp);--p-ink:var(--tp-ink);--p-soft:var(--tp-soft);--on-p:var(--on-tp);border-top:3px solid var(--tp)}
+.panel[data-fam="sw"]{--p:var(--sw);--p-ink:var(--sw-ink);--p-soft:var(--sw-soft);--on-p:var(--on-sw);border-top:3px solid var(--sw)}
+.panel-head{display:grid;gap:4px}
+.panel-head .kicker{color:var(--p-ink)}
+.panel-head h3{font-size:18px}
+.panel-head p{font-size:14px;color:var(--ink-2)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 12.5px/1 var(--f-body);padding:7px 11px;border-radius:99px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--p-soft);border-color:var(--p);color:var(--p-ink)}
+.seg-label{font-size:12.5px;color:var(--ink-3);font-family:var(--f-mono)}
+
+.strip-wrap{overflow-x:auto}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:var(--box,36px);gap:4px;width:max-content}
+.strip .mk{height:20px;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.mk span{font:600 11px/1 var(--f-mono);padding:3px 5px;border-radius:4px;background:var(--p);color:var(--on-p)}
+.mk span.alt{background:var(--ink-3);color:var(--surface)}
+.strip .v{height:36px;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:6px;font:500 15px/1 var(--f-mono);
+  background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums;transition:background .15s,border-color .15s}
+.strip .v.neg{color:var(--bad)}
+.strip .v.end{border-color:var(--p);background:var(--p-soft);box-shadow:inset 0 0 0 1px var(--p)}
+.strip .v.win{background:var(--p-soft);border-color:var(--p)}
+.strip .v.junk{background:repeating-linear-gradient(135deg,var(--surface-3) 0 3px,var(--surface) 3px 7px);color:var(--ink-3);border-style:dashed}
+.strip .v.best{box-shadow:0 0 0 2px var(--good)}
+.strip .ix{font:400 11px/1 var(--f-mono);color:var(--ink-3);text-align:center;padding-top:5px}
+
+.grid-wrap{overflow-x:auto;padding-bottom:2px}
+.axis{font:400 11.5px/1.3 var(--f-mono);color:var(--ink-3);margin-bottom:6px}
+.grid{display:grid;gap:3px;width:max-content;--cell:clamp(30px,8.2vw,40px)}
+.grid .lab{font:400 11px/1 var(--f-mono);color:var(--ink-3);display:grid;place-items:center;width:var(--cell);height:22px}
+.grid .rlab{height:var(--cell);width:22px}
+.grid .c{width:var(--cell);height:var(--cell);border-radius:5px;display:grid;place-items:center;position:relative;
+  font:500 12.5px/1 var(--f-mono);font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--ink-2);
+  transition:background .18s,color .18s,box-shadow .18s}
+.grid .c.off{background:transparent}
+.grid .c.elim{background:repeating-linear-gradient(135deg,var(--p-soft) 0 3px,var(--surface) 3px 7px);color:transparent;
+  box-shadow:inset 0 0 0 1px var(--p-soft)}
+.grid .c.cmp{background:var(--p);color:var(--on-p)}
+.grid .c.best{box-shadow:0 0 0 2px var(--good);}
+.grid .c.found{background:var(--good);color:var(--on-good)}
+.grid .c.miss{background:var(--bad-soft);color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad);font-weight:600}
+.grid .c.cur{outline:2.5px solid var(--ink);outline-offset:1px;z-index:1}
+.grid .c.truth::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--good)}
+.grid .c.miss.truth::after{background:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw-l{width:13px;height:13px;border-radius:3px;display:inline-block;background:var(--surface-2)}
+.sw-l.cmp{background:var(--p)}
+.sw-l.elim{background:repeating-linear-gradient(135deg,var(--p-soft) 0 2px,var(--surface) 2px 5px);box-shadow:inset 0 0 0 1px var(--p-soft)}
+.sw-l.found{background:var(--good)}
+.sw-l.miss{background:var(--bad-soft);box-shadow:inset 0 0 0 2px var(--bad)}
+.sw-l.truth{background:var(--surface-2);position:relative}
+.sw-l.truth::after{content:"";position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--good)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0}
+.stats div{background:var(--surface-2);border-radius:8px;padding:8px 10px;min-width:0}
+.stats dt{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.stats dd{margin:4px 0 0;font:600 19px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.stats dd small{font-weight:400;font-size:11.5px;color:var(--ink-3)}
+.cap{font-size:14.5px;line-height:1.55;color:var(--ink);background:var(--surface-2);border-left:3px solid var(--p);border-radius:0 8px 8px 0;
+  padding:11px 14px;min-height:7.2em}
+.cap .step{font:500 11px/1 var(--f-mono);color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px}
+.cap.alarm{border-left-color:var(--bad);background:var(--bad-soft)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 13.5px/1 var(--f-body);padding:9px 14px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9;background:var(--ink)}
+
+/* ---------- proofs ---------- */
+.proofs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:24px}
+.proof{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--surface);display:grid;gap:10px;align-content:start}
+.proof.tp{border-left:4px solid var(--tp)}
+.proof.sw{border-left:4px solid var(--sw)}
+.proof p{font-size:15px;color:var(--ink-2)}
+.ineq{font:400 13.5px/1.7 var(--f-mono);background:var(--surface-2);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre;color:var(--ink)}
+.callout{margin-top:22px;border:1px dashed var(--line-2);border-radius:12px;padding:16px 20px;max-width:80ch;display:grid;gap:8px}
+.callout p{color:var(--ink-2);font-size:15px}
+
+/* ---------- lockstep ---------- */
+.lock{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:26px;display:grid;gap:18px;box-shadow:var(--shadow)}
+.lane{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:18px;align-items:start;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.lane:last-of-type{border-bottom:0;padding-bottom:0}
+.lane[data-fam="tp"]{--p:var(--tp);--p-ink:var(--tp-ink);--p-soft:var(--tp-soft);--on-p:var(--on-tp)}
+.lane[data-fam="sw"]{--p:var(--sw);--p-ink:var(--sw-ink);--p-soft:var(--sw-soft);--on-p:var(--on-sw)}
+.lane-head{display:grid;gap:6px}
+.lane-head .kicker{color:var(--p-ink)}
+.lane-head p{font-size:14px;color:var(--ink-2)}
+.lane-body{display:grid;gap:10px;min-width:0}
+.lane .cap{min-height:5.2em}
+.meaning{font-size:13.5px;color:var(--ink-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---------- decision ---------- */
+.decide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-top:26px;align-items:start}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:14px;box-shadow:var(--shadow)}
+.trail{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.trail li button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:13.5px;color:var(--ink-2);padding:6px 8px;border-radius:6px}
+.trail li button:hover,.trail li button:focus-visible{background:var(--surface-2);outline:none}
+.trail li b{font-family:var(--f-mono);font-weight:500;color:var(--ink);font-size:12.5px}
+.qtext{font-family:var(--f-display);font-size:23px;line-height:1.25;font-weight:500}
+.qhint{font-size:14px;color:var(--ink-3)}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:500 15px/1.35 var(--f-body);padding:12px 14px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--ink-3);background:var(--surface-2)}
+.result{border-radius:12px;padding:20px;display:grid;gap:12px;border:1px solid var(--line);background:var(--surface);align-content:start}
+.result[data-fam="tp"]{border-top:4px solid var(--tp)}
+.result[data-fam="sw"]{border-top:4px solid var(--sw)}
+.result[data-fam="ot"]{border-top:4px solid var(--ot)}
+.result h3{font-family:var(--f-display);font-weight:500;font-size:25px}
+.result .loop{font:400 13px/1.55 var(--f-mono);background:var(--surface-2);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.result p{font-size:15px;color:var(--ink-2)}
+.result .eg{font-size:13.5px;color:var(--ink-3);font-family:var(--f-mono)}
+.result.idle{border-style:dashed;background:transparent;box-shadow:none}
+.result.idle p{color:var(--ink-3)}
+
+/* ---------- twins ---------- */
+.twins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:26px;align-items:start}
+.twin{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:12px;align-content:start}
+.twin-h{font-family:var(--f-display);font-size:21px;font-weight:500}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.side{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:grid;gap:4px;align-content:start}
+.side .lc{font:500 11.5px/1.2 var(--f-mono);color:var(--ink-3)}
+.side p{font-size:14px;line-height:1.45}
+.twin details summary{cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2);list-style:none;display:inline-flex;gap:8px;align-items:center}
+.twin details summary::-webkit-details-marker{display:none}
+.twin details summary::before{content:"+";font-family:var(--f-mono);width:18px;height:18px;border:1px solid var(--line-2);border-radius:4px;display:grid;place-items:center;font-size:13px}
+.twin details[open] summary::before{content:"\2212"}
+.reveal{display:grid;gap:8px;margin-top:10px}
+.reveal .verdicts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reveal p{font-size:14.5px;color:var(--ink-2)}
+.reveal .tag{white-space:normal;line-height:1.35}
+
+/* ---------- drill ---------- */
+.drill{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:26px;display:grid;gap:16px;box-shadow:var(--shadow);max-width:860px}
+.drill-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 12.5px/1 var(--f-mono);color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+.bar{height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink-2);width:0;transition:width .25s}
+.prompt{font-family:var(--f-display);font-size:23px;line-height:1.3}
+.choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.choice{display:flex;gap:9px;align-items:center;text-align:left;font:500 14px/1.25 var(--f-body);padding:11px 12px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer}
+.choice:hover:not(:disabled){background:var(--surface-2)}
+.choice:disabled{cursor:default}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.dot.tp{background:var(--tp)} .dot.sw{background:var(--sw)} .dot.ot{background:var(--ot)}
+.choice.right{border-color:var(--good);background:var(--good-soft);box-shadow:inset 0 0 0 1px var(--good)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.fb{border-radius:10px;padding:12px 14px;font-size:15px;display:grid;gap:4px}
+.fb.ok{background:var(--good-soft)}
+.fb.no{background:var(--bad-soft)}
+.fb b{font-weight:600}
+.fb .lc{font:400 12.5px/1.3 var(--f-mono);color:var(--ink-3)}
+.summary{display:grid;gap:10px}
+.summary .score{font-family:var(--f-display);font-size:34px}
+.summary ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14.5px;color:var(--ink-2)}
+
+/* ---------- anatomy ---------- */
+.table-wrap{overflow-x:auto;margin-top:24px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+thead th{font:500 11.5px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);background:var(--surface-2)}
+thead th.tp-h{color:var(--tp-ink)} thead th.sw-h{color:var(--sw-ink)}
+tbody th{font-weight:500;color:var(--ink-2);width:22%}
+td code{white-space:nowrap}
+.code-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:22px}
+.code{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;min-width:0}
+.code .ch{font:500 12px/1 var(--f-mono);letter-spacing:.06em;padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.code.tp .ch{color:var(--tp-ink);background:var(--tp-soft)}
+.code.sw .ch{color:var(--sw-ink);background:var(--sw-soft)}
+.code pre{margin:0;padding:14px;overflow-x:auto;font:400 13px/1.6 var(--f-mono);color:var(--ink)}
+.code pre .cm{color:var(--ink-3)}
+.code pre .kw{color:var(--tp-ink)}
+.code.sw pre .kw{color:var(--sw-ink)}
+
+footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;font-size:14.5px;color:var(--ink-2)}
+footer h3{font-size:14px;margin-bottom:8px;color:var(--ink)}
+footer ul{margin:0;padding-left:18px;display:grid;gap:4px}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:28px;padding-block:36px 24px}
+  .pair,.proofs,.decide,.twins,.code-pair,footer{grid-template-columns:1fr}
+  .lane{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  body{padding-inline:16px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sides,.reveal .verdicts{grid-template-columns:1fr}
+  .panel,.lock,.drill,.qcard{padding:14px}
+  .prompt,.qtext{font-size:20px}
+  .strip{--box:32px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="wrap hero">
+  <div>
+    <div class="kicker">Pattern study · two pointers against sliding window</div>
+    <h1>Pointers <span class="amp">or</span> Window?</h1>
+    <p class="lead">Both patterns search the same space, the grid of every (start, end) pair, and both finish in O(n) by throwing away a whole row or column per step. What differs is the question they ask and the fact that makes the throw-away legal.</p>
+    <div class="answer">
+      <div><span class="tag tp">Two pointers</span><span>Asks what's at the two <strong>ends</strong>. Legal because the input is <strong>sorted</strong>.</span></div>
+      <div><span class="tag sw">Sliding window</span><span>Asks what's <strong>inside</strong> the range. Legal because validity is <strong>monotone</strong>, for example no negative values.</span></div>
+      <div><span class="tag ot">Neither</span><span>Can't sort and need positions: a hash map. Negatives with a sum target: prefix sums.</span></div>
+    </div>
+  </div>
+  <figure class="hero-fig" style="margin:0">
+    <svg id="heroSvg" viewBox="0 0 372 318" role="img" aria-label="A 7 by 7 grid of start and end indices. The two-pointer path starts in the top-right corner and moves down, then left. The window path runs along the diagonal from the top-left. Both reach cell 4, 5."></svg>
+    <figcaption>Array <code>[1, 2, 3, 4, 6, 8, 9]</code>, target 14. Rows are the start index, columns the end index. <span class="tp-t">Blue</span>: two pointers looking for a pair summing to 14. <span class="sw-t">Amber</span>: a window looking for the shortest run with sum ≥ 14. They take different routes to the same cell.</figcaption>
+  </figure>
+</header>
+
+<nav class="wrap toc" aria-label="Sections">
+  <a href="#grid"><b>1</b>One grid, two staircases</a>
+  <a href="#safe"><b>2</b>Why the skip is safe</a>
+  <a href="#gap"><b>3</b>Same direction ≠ window</a>
+  <a href="#decide"><b>4</b>The decision</a>
+  <a href="#twins"><b>5</b>Twins</a>
+  <a href="#drill"><b>6</b>Name the pattern</a>
+  <a href="#side"><b>7</b>Side by side</a>
+</nav>
+
+<main class="wrap">
+
+<section id="grid">
+  <div class="sec-head"><span class="sec-n">1</span><h2>One grid, two staircases</h2><span class="sub">Day 1 · both are O(n) for the same reason</span></div>
+  <div class="prose">
+    <p>Brute force on an array of n items looks at every cell of an n×n grid: a pair (i, j) for two pointers, a window [l..r] for a sliding window. That is about n²/2 cells.</p>
+    <p>Both patterns do the same trick. They compute <strong>one</strong> cell, prove that a whole row or column around it can't hold a better answer, and discard it without looking. Each step deletes a line, so the walk ends after about n steps (two pointers) or 2n steps (window). Step both panels and watch the <em>unknown</em> counter fall.</p>
+  </div>
+  <div class="pair">
+    <div class="panel" data-fam="tp" id="p1a"></div>
+    <div class="panel" data-fam="sw" id="p1b"></div>
+  </div>
+  <div class="legend" style="margin-top:14px">
+    <span><i class="sw-l cmp" style="--p:var(--ink-2)"></i>computed</span>
+    <span><i class="sw-l elim" style="--p-soft:var(--line-2)"></i>ruled out unseen</span>
+    <span><i class="sw-l"></i>not reached</span>
+    <span><i class="sw-l found"></i>answer</span>
+    <span><i class="sw-l truth"></i>brute-force answer</span>
+    <span><i class="sw-l miss"></i>answer thrown away</span>
+  </div>
+</section>
+
+<section id="safe">
+  <div class="sec-head"><span class="sec-n">2</span><h2>Why the skip is safe, and how to break it</h2><span class="sub">Day 1 and Day 4 · the precondition is the pattern</span></div>
+  <div class="prose">
+    <p>Every elimination in section 1 rested on one inequality. Learn the inequality and you know when each pattern is allowed.</p>
+  </div>
+  <div class="proofs">
+    <div class="proof tp">
+      <span class="tag tp" style="justify-self:start">Two pointers needs order</span>
+      <p>If <code>a</code> is sorted and <code>a[i] + a[j] &lt; target</code>, then every other partner j′ &lt; j left in row i is no bigger than <code>a[j]</code>:</p>
+      <div class="ineq">a[i] + a[j′]  ≤  a[i] + a[j]  &lt;  target</div>
+      <p>So row i is dead. The mirror argument kills column j when the sum is too big.</p>
+    </div>
+    <div class="proof sw">
+      <span class="tag sw" style="justify-self:start">A window needs monotone validity</span>
+      <p>If every value is ≥ 0 and <code>sum(a[l..r]) &lt; S</code>, then every shorter window ending at r only loses values:</p>
+      <div class="ineq">sum(a[l′..r])  ≤  sum(a[l..r])  &lt;  S     for l′ &gt; l</div>
+      <p>So column r is dead. When the window is valid, the rest of row l is only longer, so it is dead too.</p>
+    </div>
+  </div>
+  <div class="prose" style="margin-top:22px">
+    <p>Now remove the precondition and run the same code. The left panel's array is almost sorted, with one 9 out of place. The right panel has a single negative. Watch for the cell that turns red: a real answer, discarded without being looked at.</p>
+  </div>
+  <div class="pair">
+    <div class="panel" data-fam="tp" id="p2a"></div>
+    <div class="panel" data-fam="sw" id="p2b"></div>
+  </div>
+  <div class="callout">
+    <p><strong>What to reach for instead.</strong> If you can't sort because you must return original positions, use a hash map for O(n), or sort <code>(value, index)</code> pairs and keep two pointers at O(n log n). If values can be negative, a window's shrink step is no longer safe: count with prefix sums and a hash map (LC 560), or find the shortest with prefix sums and a monotonic deque (LC 862).</p>
+  </div>
+</section>
+
+<section id="gap">
+  <div class="sec-head"><span class="sec-n">3</span><h2>Same direction is not the same as a window</h2><span class="sub">Day 4 · ask what the gap between the pointers means</span></div>
+  <div class="prose">
+    <p>The confusing case is two pointers that both move right. Read/write pointers (Move Zeroes) and a window (Max Consecutive Ones III) look identical from a distance: <code>for r in range(n)</code>, a second pointer that trails behind, one pass. Run them on the same array and the difference shows up in the gap between the pointers.</p>
+  </div>
+  <div class="lock" id="lock"></div>
+</section>
+
+<section id="decide">
+  <div class="sec-head"><span class="sec-n">4</span><h2>The decision, one question at a time</h2><span class="sub">Day 4 · stop at the first answer that fits</span></div>
+  <div class="prose">
+    <p>Answer the questions in order about a problem you're looking at. Each answer narrows the choice. Click an earlier answer in the trail to go back and try the other branch.</p>
+  </div>
+  <div class="decide">
+    <div class="qcard" id="qcard"></div>
+    <div class="result idle" id="result"><p>The pattern appears here once you reach it, with its loop header, the tell to look for, and problems that use it.</p></div>
+  </div>
+</section>
+
+<section id="twins">
+  <div class="sec-head"><span class="sec-n">5</span><h2>Twins</h2><span class="sub">Day 4 · one word apart, different patterns</span></div>
+  <div class="prose">
+    <p>Each card holds two problems that read almost the same. Before opening it, name the pattern for each side and the word that decides it.</p>
+  </div>
+  <div class="twins" id="twinList"></div>
+</section>
+
+<section id="drill">
+  <div class="sec-head"><span class="sec-n">6</span><h2>Name the pattern</h2><span class="sub">Day 5 · twelve unlabelled prompts</span></div>
+  <div class="prose">
+    <p>Problem numbers are hidden until you answer. Say your reason out loud before you click; the reason is what an interviewer is listening for. Aim for 10 of 12 on the first pass.</p>
+  </div>
+  <div class="drill" id="drillCard"></div>
+</section>
+
+<section id="side">
+  <div class="sec-head"><span class="sec-n">7</span><h2>Side by side</h2><span class="sub">Keep this for revision</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th class="tp-h">Converging two pointers</th><th class="sw-h">Sliding window</th></tr></thead>
+      <tbody>
+        <tr><th>The question</th><td>What's at the two ends?</td><td>What's inside the range?</td></tr>
+        <tr><th>Pointers start</th><td>At opposite ends</td><td>Both at the left</td></tr>
+        <tr><th>They move</th><td>Toward each other until they meet</td><td>Both rightward; <code>right</code> leads and <code>left</code> never passes it</td></tr>
+        <tr><th>Loop</th><td><code>while i &lt; j:</code></td><td><code>for right in range(n):</code></td></tr>
+        <tr><th>State carried</th><td>Nothing beyond <code>a[i]</code> and <code>a[j]</code></td><td>A running summary of <code>a[left..right]</code>: a sum, a <code>Counter</code>, a set</td></tr>
+        <tr><th>Each step decides by</th><td>Comparing <code>f(a[i], a[j])</code> with the target</td><td>Asking whether the window is still valid</td></tr>
+        <tr><th>Precondition</th><td>Sorted, or allowed to sort</td><td>Validity moves one way as the window grows or shrinks</td></tr>
+        <tr><th>Path on the grid</th><td>Top-right corner inward to the diagonal</td><td>Along the diagonal, top-left to bottom-right</td></tr>
+        <tr><th>Steps</th><td>At most n − 1</td><td>At most 2n</td></tr>
+        <tr><th>Breaks when</th><td>You can't sort because you need original positions in O(n)</td><td>Values go negative, or the target is an exact sum</td></tr>
+        <tr><th>Close relatives</th><td>Read/write (in-place), two-sequence (merge, subsequence), fix-one for k-sum</td><td>Fixed length, at-most counting, window plus deque for max/min</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="code-pair">
+    <div class="code tp">
+      <div class="ch"><span>converging · LC 167 shape</span><span>O(n) · O(1)</span></div>
+<pre id="codeTp"><span class="kw">def</span> pair_with_sum(a, target):
+    <span class="cm">"""a is sorted. Return (i, j) with a[i] + a[j] == target, or None."""</span>
+    i, j = 0, len(a) - 1
+    <span class="kw">while</span> i &lt; j:
+        s = a[i] + a[j]
+        <span class="kw">if</span> s == target:
+            <span class="kw">return</span> i, j
+        <span class="kw">if</span> s &lt; target:
+            i += 1          <span class="cm"># row i can't reach target: drop it</span>
+        <span class="kw">else</span>:
+            j -= 1          <span class="cm"># column j overshoots: drop it</span>
+    <span class="kw">return</span> None</pre>
+    </div>
+    <div class="code sw">
+      <div class="ch"><span>window · LC 209 shape</span><span>O(n) · O(1)</span></div>
+<pre id="codeSw"><span class="kw">import</span> math
+
+<span class="kw">def</span> shortest_at_least(a, target):
+    <span class="cm">"""Every a[x] >= 0. Length of the shortest run with sum >= target, or 0."""</span>
+    best = math.inf
+    left = window = 0
+    <span class="kw">for</span> right, x <span class="kw">in</span> enumerate(a):
+        window += x                    <span class="cm"># grow: take a[right]</span>
+        <span class="kw">while</span> window &gt;= target:        <span class="cm"># valid: record, then try shorter</span>
+            best = min(best, right - left + 1)
+            window -= a[left]          <span class="cm"># shrink: drop a[left]</span>
+            left += 1
+    <span class="kw">return</span> 0 <span class="kw">if</span> best == math.inf <span class="kw">else</span> best</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <h3>Where this fits</h3>
+    <ul>
+      <li><a href="https://claude.ai/code/artifact/e0e67a33-dee3-486f-a7d1-fcdb5098154c" target="_blank" rel="noopener">Reading plan: Two Pointers vs Sliding Window</a> (five sessions, readings, problem sets)</li>
+      <li><a href="https://claude.ai/code/artifact/d830e6dc-0978-4107-ab13-a32602cca27e" target="_blank" rel="noopener">Two-Pointer Elimination</a></li>
+      <li><a href="https://claude.ai/code/artifact/869b8502-53a4-497f-a75d-2a1ccdd8bc8e" target="_blank" rel="noopener">Two Pointers Workbench</a></li>
+      <li><a href="https://claude.ai/code/artifact/d6fb6805-80f0-40e4-a259-52f4d6737b9b" target="_blank" rel="noopener">3Sum Dissected</a></li>
+      <li><a href="https://claude.ai/code/artifact/62f47fe7-71d6-4a86-9976-ed5caf2fe87f" target="_blank" rel="noopener">Sliding Window Workbench</a></li>
+    </ul>
+  </div>
+  <div>
+    <h3>How this page was checked</h3>
+    <p>Every frame in the step-throughs was generated in Python and replayed here as data. The two grid engines agree with brute force on 6,000 random arrays, and every run covers all cells within the step bounds shown. The 21 reference solutions behind the twin and drill answers each match an exhaustive oracle on 1,500 random inputs, the two templates in section 7 match one on 3,000, and a separate check confirms the plain window gets 174 of 1,500 random arrays wrong once negatives are allowed.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+const DATA = {"tp_main":{"kind":"tp","a":[1,2,3,4,6,8,9],"t":14,"truth":[[4,5]],"frames":[{"cell":[0,6],"i":0,"j":6,"s":10,"elim":[[0,1],[0,2],[0,3],[0,4],[0,5]],"miss":[],"verdict":"lt","cap":"a[0] + a[6] = 1 + 9 = 10 < 14. Every other cell left in row 0 pairs 1 with something no bigger than 9, so it falls short too. Row 0 is out: i → 1."},{"cell":[1,6],"i":1,"j":6,"s":11,"elim":[[1,2],[1,3],[1,4],[1,5]],"miss":[],"verdict":"lt","cap":"a[1] + a[6] = 2 + 9 = 11 < 14. Every other cell left in row 1 pairs 2 with something no bigger than 9, so it falls short too. Row 1 is out: i → 2."},{"cell":[2,6],"i":2,"j":6,"s":12,"elim":[[2,3],[2,4],[2,5]],"miss":[],"verdict":"lt","cap":"a[2] + a[6] = 3 + 9 = 12 < 14. Every other cell left in row 2 pairs 3 with something no bigger than 9, so it falls short too. Row 2 is out: i → 3."},{"cell":[3,6],"i":3,"j":6,"s":13,"elim":[[3,4],[3,5]],"miss":[],"verdict":"lt","cap":"a[3] + a[6] = 4 + 9 = 13 < 14. Every other cell left in row 3 pairs 4 with something no bigger than 9, so it falls short too. Row 3 is out: i → 4."},{"cell":[4,6],"i":4,"j":6,"s":15,"elim":[[5,6]],"miss":[],"verdict":"gt","cap":"a[4] + a[6] = 6 + 9 = 15 > 14. Every other cell left in column 6 pairs 9 with something no smaller than 6, so it overshoots too. Column 6 is out: j → 5."},{"cell":[4,5],"i":4,"j":5,"s":14,"elim":[],"miss":[],"verdict":"eq","cap":"a[4] + a[5] = 6 + 8 = 14. Target hit, so return (4, 5)."}],"result":[4,5],"total":21,"computed":6,"eliminated":15},"tp_none":{"kind":"tp","a":[1,2,3,4,6,8,9],"t":16,"truth":[],"frames":[{"cell":[0,6],"i":0,"j":6,"s":10,"elim":[[0,1],[0,2],[0,3],[0,4],[0,5]],"miss":[],"verdict":"lt","cap":"a[0] + a[6] = 1 + 9 = 10 < 16. Every other cell left in row 0 pairs 1 with something no bigger than 9, so it falls short too. Row 0 is out: i → 1."},{"cell":[1,6],"i":1,"j":6,"s":11,"elim":[[1,2],[1,3],[1,4],[1,5]],"miss":[],"verdict":"lt","cap":"a[1] + a[6] = 2 + 9 = 11 < 16. Every other cell left in row 1 pairs 2 with something no bigger than 9, so it falls short too. Row 1 is out: i → 2."},{"cell":[2,6],"i":2,"j":6,"s":12,"elim":[[2,3],[2,4],[2,5]],"miss":[],"verdict":"lt","cap":"a[2] + a[6] = 3 + 9 = 12 < 16. Every other cell left in row 2 pairs 3 with something no bigger than 9, so it falls short too. Row 2 is out: i → 3."},{"cell":[3,6],"i":3,"j":6,"s":13,"elim":[[3,4],[3,5]],"miss":[],"verdict":"lt","cap":"a[3] + a[6] = 4 + 9 = 13 < 16. Every other cell left in row 3 pairs 4 with something no bigger than 9, so it falls short too. Row 3 is out: i → 4."},{"cell":[4,6],"i":4,"j":6,"s":15,"elim":[[4,5]],"miss":[],"verdict":"lt","cap":"a[4] + a[6] = 6 + 9 = 15 < 16. Every other cell left in row 4 pairs 6 with something no bigger than 9, so it falls short too. Row 4 is out: i → 5."},{"cell":[5,6],"i":5,"j":6,"s":17,"elim":[],"miss":[],"verdict":"gt","cap":"a[5] + a[6] = 8 + 9 = 17 > 16. Every other cell left in column 6 pairs 9 with something no smaller than 8, so it overshoots too. Column 6 is out: j → 5."},{"cell":null,"i":5,"j":5,"verdict":"end","elim":[],"miss":[],"cap":"i meets j. Every pair has been computed or ruled out, and none sums to 16."}],"result":null,"total":21,"computed":6,"eliminated":15},"sw_main":{"kind":"sw","a":[1,2,3,4,6,8,9],"t":14,"truth":[[4,5],[5,6]],"frames":[{"cell":[0,0],"l":0,"r":0,"s":1,"elim":[],"miss":[],"verdict":"invalid","cap":"Grow: take a[0] = 1. Window [0..0] sums to 1 < 14: not enough. Grow: r → 1.","best":null},{"cell":[0,1],"l":0,"r":1,"s":3,"elim":[[1,1]],"miss":[],"verdict":"invalid","cap":"Grow: take a[1] = 2. Window [0..1] sums to 1 + 2 = 3 < 14: not enough. Shorter windows ending at 1 (starting at 1) only lose values that are ≥ 0, so they fall short too. The rest of column 1 is out. Grow: r → 2.","best":null},{"cell":[0,2],"l":0,"r":2,"s":6,"elim":[[1,2],[2,2]],"miss":[],"verdict":"invalid","cap":"Grow: take a[2] = 3. Window [0..2] sums to 1 + 2 + 3 = 6 < 14: not enough. Shorter windows ending at 2 (starting at 1, 2) only lose values that are ≥ 0, so they fall short too. The rest of column 2 is out. Grow: r → 3.","best":null},{"cell":[0,3],"l":0,"r":3,"s":10,"elim":[[1,3],[2,3],[3,3]],"miss":[],"verdict":"invalid","cap":"Grow: take a[3] = 4. Window [0..3] sums to 1 + 2 + 3 + 4 = 10 < 14: not enough. Shorter windows ending at 3 (starting at 1, 2, 3) only lose values that are ≥ 0, so they fall short too. The rest of column 3 is out. Grow: r → 4.","best":null},{"cell":[0,4],"l":0,"r":4,"s":16,"elim":[[0,5],[0,6]],"miss":[],"verdict":"valid","cap":"Grow: take a[4] = 6. Window [0..4] sums to 1 + 2 + 3 + 4 + 6 = 16 ≥ 14: valid, length 5, a new best. Everything else in row 0 starts at 0 and ends later, so it is longer and can't win. Row 0 is out. Shrink: l → 1.","best":[0,4]},{"cell":[1,4],"l":1,"r":4,"s":15,"elim":[[1,5],[1,6]],"miss":[],"verdict":"valid","cap":"Shrink: drop a[0] = 1. Window [1..4] sums to 2 + 3 + 4 + 6 = 15 ≥ 14: valid, length 4, a new best. Everything else in row 1 starts at 1 and ends later, so it is longer and can't win. Row 1 is out. Shrink: l → 2.","best":[1,4]},{"cell":[2,4],"l":2,"r":4,"s":13,"elim":[[3,4],[4,4]],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[1] = 2. Window [2..4] sums to 3 + 4 + 6 = 13 < 14: not enough. Shorter windows ending at 4 (starting at 3, 4) only lose values that are ≥ 0, so they fall short too. The rest of column 4 is out. Grow: r → 5.","best":[1,4]},{"cell":[2,5],"l":2,"r":5,"s":21,"elim":[[2,6]],"miss":[],"verdict":"valid","cap":"Grow: take a[5] = 8. Window [2..5] sums to 3 + 4 + 6 + 8 = 21 ≥ 14: valid, length 4, no better than the best, length 4. Everything else in row 2 starts at 2 and ends later, so it is longer and can't win. Row 2 is out. Shrink: l → 3.","best":[1,4]},{"cell":[3,5],"l":3,"r":5,"s":18,"elim":[[3,6]],"miss":[],"verdict":"valid","cap":"Shrink: drop a[2] = 3. Window [3..5] sums to 4 + 6 + 8 = 18 ≥ 14: valid, length 3, a new best. Everything else in row 3 starts at 3 and ends later, so it is longer and can't win. Row 3 is out. Shrink: l → 4.","best":[3,5]},{"cell":[4,5],"l":4,"r":5,"s":14,"elim":[[4,6]],"miss":[],"verdict":"valid","cap":"Shrink: drop a[3] = 4. Window [4..5] sums to 6 + 8 = 14 ≥ 14: valid, length 2, a new best. Everything else in row 4 starts at 4 and ends later, so it is longer and can't win. Row 4 is out. Shrink: l → 5.","best":[4,5]},{"cell":[5,5],"l":5,"r":5,"s":8,"elim":[],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[4] = 6. Window [5..5] sums to 8 < 14: not enough. Grow: r → 6.","best":[4,5]},{"cell":[5,6],"l":5,"r":6,"s":17,"elim":[],"miss":[],"verdict":"valid","cap":"Grow: take a[6] = 9. Window [5..6] sums to 8 + 9 = 17 ≥ 14: valid, length 2, no better than the best, length 2. Everything else in row 5 starts at 5 and ends later, so it is longer and can't win. Row 5 is out. Shrink: l → 6.","best":[4,5]},{"cell":[6,6],"l":6,"r":6,"s":9,"elim":[],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[5] = 8. Window [6..6] sums to 9 < 14: not enough. r is at the end, so stop.","best":[4,5]},{"cell":null,"l":6,"r":6,"verdict":"end","elim":[],"miss":[],"best":[4,5],"cap":"Done. Shortest valid window found: [4..5], length 2."}],"result":[4,5],"total":28,"computed":13,"eliminated":15},"sw_unsorted":{"kind":"sw","a":[2,3,1,2,4,3],"t":7,"truth":[[4,5]],"frames":[{"cell":[0,0],"l":0,"r":0,"s":2,"elim":[],"miss":[],"verdict":"invalid","cap":"Grow: take a[0] = 2. Window [0..0] sums to 2 < 7: not enough. Grow: r → 1.","best":null},{"cell":[0,1],"l":0,"r":1,"s":5,"elim":[[1,1]],"miss":[],"verdict":"invalid","cap":"Grow: take a[1] = 3. Window [0..1] sums to 2 + 3 = 5 < 7: not enough. Shorter windows ending at 1 (starting at 1) only lose values that are ≥ 0, so they fall short too. The rest of column 1 is out. Grow: r → 2.","best":null},{"cell":[0,2],"l":0,"r":2,"s":6,"elim":[[1,2],[2,2]],"miss":[],"verdict":"invalid","cap":"Grow: take a[2] = 1. Window [0..2] sums to 2 + 3 + 1 = 6 < 7: not enough. Shorter windows ending at 2 (starting at 1, 2) only lose values that are ≥ 0, so they fall short too. The rest of column 2 is out. Grow: r → 3.","best":null},{"cell":[0,3],"l":0,"r":3,"s":8,"elim":[[0,4],[0,5]],"miss":[],"verdict":"valid","cap":"Grow: take a[3] = 2. Window [0..3] sums to 2 + 3 + 1 + 2 = 8 ≥ 7: valid, length 4, a new best. Everything else in row 0 starts at 0 and ends later, so it is longer and can't win. Row 0 is out. Shrink: l → 1.","best":[0,3]},{"cell":[1,3],"l":1,"r":3,"s":6,"elim":[[2,3],[3,3]],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[0] = 2. Window [1..3] sums to 3 + 1 + 2 = 6 < 7: not enough. Shorter windows ending at 3 (starting at 2, 3) only lose values that are ≥ 0, so they fall short too. The rest of column 3 is out. Grow: r → 4.","best":[0,3]},{"cell":[1,4],"l":1,"r":4,"s":10,"elim":[[1,5]],"miss":[],"verdict":"valid","cap":"Grow: take a[4] = 4. Window [1..4] sums to 3 + 1 + 2 + 4 = 10 ≥ 7: valid, length 4, no better than the best, length 4. Everything else in row 1 starts at 1 and ends later, so it is longer and can't win. Row 1 is out. Shrink: l → 2.","best":[0,3]},{"cell":[2,4],"l":2,"r":4,"s":7,"elim":[[2,5]],"miss":[],"verdict":"valid","cap":"Shrink: drop a[1] = 3. Window [2..4] sums to 1 + 2 + 4 = 7 ≥ 7: valid, length 3, a new best. Everything else in row 2 starts at 2 and ends later, so it is longer and can't win. Row 2 is out. Shrink: l → 3.","best":[2,4]},{"cell":[3,4],"l":3,"r":4,"s":6,"elim":[[4,4]],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[2] = 1. Window [3..4] sums to 2 + 4 = 6 < 7: not enough. Shorter windows ending at 4 (starting at 4) only lose values that are ≥ 0, so they fall short too. The rest of column 4 is out. Grow: r → 5.","best":[2,4]},{"cell":[3,5],"l":3,"r":5,"s":9,"elim":[],"miss":[],"verdict":"valid","cap":"Grow: take a[5] = 3. Window [3..5] sums to 2 + 4 + 3 = 9 ≥ 7: valid, length 3, no better than the best, length 3. Everything else in row 3 starts at 3 and ends later, so it is longer and can't win. Row 3 is out. Shrink: l → 4.","best":[2,4]},{"cell":[4,5],"l":4,"r":5,"s":7,"elim":[],"miss":[],"verdict":"valid","cap":"Shrink: drop a[3] = 2. Window [4..5] sums to 4 + 3 = 7 ≥ 7: valid, length 2, a new best. Everything else in row 4 starts at 4 and ends later, so it is longer and can't win. Row 4 is out. Shrink: l → 5.","best":[4,5]},{"cell":[5,5],"l":5,"r":5,"s":3,"elim":[],"miss":[],"verdict":"invalid","cap":"Shrink: drop a[4] = 4. Window [5..5] sums to 3 < 7: not enough. r is at the end, so stop.","best":[4,5]},{"cell":null,"l":5,"r":5,"verdict":"end","elim":[],"miss":[],"best":[4,5],"cap":"Done. Shortest valid window found: [4..5], length 2."}],"result":[4,5],"total":21,"computed":11,"eliminated":10},"tp_broken":{"kind":"tp","a":[1,4,5,9,2,7,8],"t":15,"truth":[[5,6]],"frames":[{"cell":[0,6],"i":0,"j":6,"s":9,"elim":[[0,1],[0,2],[0,3],[0,4],[0,5]],"miss":[],"verdict":"lt","cap":"a[0] + a[6] = 1 + 8 = 9 < 15. The algorithm assumes everything left of column 6 is no bigger than 8, so it drops row 0: i → 1."},{"cell":[1,6],"i":1,"j":6,"s":12,"elim":[[1,2],[1,3],[1,4],[1,5]],"miss":[],"verdict":"lt","cap":"a[1] + a[6] = 4 + 8 = 12 < 15. The algorithm assumes everything left of column 6 is no bigger than 8, so it drops row 1: i → 2."},{"cell":[2,6],"i":2,"j":6,"s":13,"elim":[[2,3],[2,4],[2,5]],"miss":[],"verdict":"lt","cap":"a[2] + a[6] = 5 + 8 = 13 < 15. The algorithm assumes everything left of column 6 is no bigger than 8, so it drops row 2: i → 3."},{"cell":[3,6],"i":3,"j":6,"s":17,"elim":[[4,6],[5,6]],"miss":[[5,6]],"verdict":"gt","cap":"a[3] + a[6] = 9 + 8 = 17 > 15. The algorithm assumes everything below row 3 is no smaller than 9, so it drops column 6: j → 5. That assumption is false here: (5, 6) = 7 + 8 = 15 was a real answer, thrown away unseen."},{"cell":[3,5],"i":3,"j":5,"s":16,"elim":[[4,5]],"miss":[],"verdict":"gt","cap":"a[3] + a[5] = 9 + 7 = 16 > 15. The algorithm assumes everything below row 3 is no smaller than 9, so it drops column 5: j → 4."},{"cell":[3,4],"i":3,"j":4,"s":11,"elim":[],"miss":[],"verdict":"lt","cap":"a[3] + a[4] = 9 + 2 = 11 < 15. The algorithm assumes everything left of column 4 is no bigger than 2, so it drops row 3: i → 4."},{"cell":null,"i":4,"j":4,"verdict":"end","elim":[],"miss":[],"cap":"i meets j and the search reports no pair, yet brute force finds 1: (5,6)."}],"result":null,"total":21,"computed":6,"eliminated":15},"sw_broken":{"kind":"sw","a":[4,5,-5,1,6,7],"t":12,"truth":[[4,5]],"frames":[{"cell":[0,0],"l":0,"r":0,"s":4,"elim":[],"miss":[],"verdict":"invalid","cap":"Grow: take a[0] = 4. Window [0..0] sums to 4 < 12: not enough. Grow: r → 1.","best":null},{"cell":[0,1],"l":0,"r":1,"s":9,"elim":[[1,1]],"miss":[],"verdict":"invalid","cap":"Grow: take a[1] = 5. Window [0..1] sums to 4 + 5 = 9 < 12: not enough. The window assumes every value is ≥ 0, so shorter windows ending at 1 must fall short too, and it drops the rest of column 1. Grow: r → 2.","best":null},{"cell":[0,2],"l":0,"r":2,"s":4,"elim":[[1,2],[2,2]],"miss":[],"verdict":"invalid","cap":"Grow: take a[2] = −5. Window [0..2] sums to 4 + 5 + (−5) = 4 < 12: not enough. The window assumes every value is ≥ 0, so shorter windows ending at 2 must fall short too, and it drops the rest of column 2. Grow: r → 3.","best":null},{"cell":[0,3],"l":0,"r":3,"s":5,"elim":[[1,3],[2,3],[3,3]],"miss":[],"verdict":"invalid","cap":"Grow: take a[3] = 1. Window [0..3] sums to 4 + 5 + (−5) + 1 = 5 < 12: not enough. The window assumes every value is ≥ 0, so shorter windows ending at 3 must fall short too, and it drops the rest of column 3. Grow: r → 4.","best":null},{"cell":[0,4],"l":0,"r":4,"s":11,"elim":[[1,4],[2,4],[3,4],[4,4]],"miss":[],"verdict":"invalid","cap":"Grow: take a[4] = 6. Window [0..4] sums to 4 + 5 + (−5) + 1 + 6 = 11 < 12: not enough. The window assumes every value is ≥ 0, so shorter windows ending at 4 must fall short too, and it drops the rest of column 4. Grow: r → 5.","best":null},{"cell":[0,5],"l":0,"r":5,"s":18,"elim":[],"miss":[],"verdict":"valid","cap":"Grow: take a[5] = 7. Window [0..5] sums to 4 + 5 + (−5) + 1 + 6 + 7 = 18 ≥ 12: valid, length 6, a new best. Everything else in row 0 starts at 0 and ends later, so it is longer and can't win. Row 0 is out. Shrink: l → 1.","best":[0,5]},{"cell":[1,5],"l":1,"r":5,"s":14,"elim":[],"miss":[],"verdict":"valid","cap":"Shrink: drop a[0] = 4. Window [1..5] sums to 5 + (−5) + 1 + 6 + 7 = 14 ≥ 12: valid, length 5, a new best. Everything else in row 1 starts at 1 and ends later, so it is longer and can't win. Row 1 is out. Shrink: l → 2.","best":[1,5]},{"cell":[2,5],"l":2,"r":5,"s":9,"elim":[[3,5],[4,5],[5,5]],"miss":[[4,5]],"verdict":"invalid","cap":"Shrink: drop a[1] = 5. Window [2..5] sums to −5 + 1 + 6 + 7 = 9 < 12: not enough. The window assumes every value is ≥ 0, so shorter windows ending at 5 must fall short too, and it drops the rest of column 5. r is at the end, so stop. That assumption is false here: a[2] = −5, and dropping it raises the sum. [4..5] sums to 13, length 2, and was thrown away unseen.","best":[1,5]},{"cell":null,"l":2,"r":5,"verdict":"end","elim":[],"miss":[],"best":[1,5],"cap":"Done. Shortest valid window found: [1..5], length 5. Brute force says the true shortest has length 2: [4..5]."}],"result":[1,5],"total":21,"computed":8,"eliminated":13},"lockstep":{"arr":[1,0,1,1,0,1,0,1,1],"k":1,"frames":[{"r":-1,"mz":{"arr":[1,0,1,1,0,1,0,1,1],"w":0},"win":{"l":0,"zeros":0,"best":0,"span":null},"capA":"Both loops will run right over the same array, one index per step.","capB":"Allowed zeros inside the window: k = 1."},{"r":0,"mz":{"arr":[1,0,1,1,0,1,0,1,1],"w":1},"win":{"l":0,"zeros":0,"best":1,"span":[0,0]},"capA":"read = 0 sees 1: non-zero and already at write = 0, so keep it; write → 1.","capB":"right = 0 takes a 1. Window [0..0] has 0 zeros ≤ k, length 1, a new best."},{"r":1,"mz":{"arr":[1,0,1,1,0,1,0,1,1],"w":1},"win":{"l":0,"zeros":1,"best":2,"span":[0,1]},"capA":"read = 1 sees 0: leave it; write stays at 1. The gap (cell 1) holds only zeros, and all that will ever happen to it is being overwritten.","capB":"right = 1 takes a 0. Window [0..1] has 1 zero ≤ k, length 2, a new best."},{"r":2,"mz":{"arr":[1,1,0,1,0,1,0,1,1],"w":2},"win":{"l":0,"zeros":1,"best":3,"span":[0,2]},"capA":"read = 2 sees 1: non-zero, so swap it into slot write = 1, then write → 2. The gap (cell 2) holds only zeros waiting to be overwritten.","capB":"right = 2 takes a 1. Window [0..2] has 1 zero ≤ k, length 3, a new best."},{"r":3,"mz":{"arr":[1,1,1,0,0,1,0,1,1],"w":3},"win":{"l":0,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 3 sees 1: non-zero, so swap it into slot write = 2, then write → 3. The gap (cell 3) holds only zeros waiting to be overwritten.","capB":"right = 3 takes a 1. Window [0..3] has 1 zero ≤ k, length 4, a new best."},{"r":4,"mz":{"arr":[1,1,1,0,0,1,0,1,1],"w":3},"win":{"l":2,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 4 sees 0: leave it; write stays at 3. The gap (cells 3..4) holds only zeros, and all that will ever happen to it is being overwritten.","capB":"right = 4 takes a 0; that makes 2 zeros, one too many. left moves from 0 to 2, dropping the zero at index 1. Window [2..4] has 1 zero, length 3."},{"r":5,"mz":{"arr":[1,1,1,1,0,0,0,1,1],"w":4},"win":{"l":2,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 5 sees 1: non-zero, so swap it into slot write = 3, then write → 4. The gap (cells 4..5) holds only zeros waiting to be overwritten.","capB":"right = 5 takes a 1. Window [2..5] has 1 zero ≤ k, length 4."},{"r":6,"mz":{"arr":[1,1,1,1,0,0,0,1,1],"w":4},"win":{"l":5,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 6 sees 0: leave it; write stays at 4. The gap (cells 4..6) holds only zeros, and all that will ever happen to it is being overwritten.","capB":"right = 6 takes a 0; that makes 2 zeros, one too many. left moves from 2 to 5, dropping the zero at index 4. Window [5..6] has 1 zero, length 2."},{"r":7,"mz":{"arr":[1,1,1,1,1,0,0,0,1],"w":5},"win":{"l":5,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 7 sees 1: non-zero, so swap it into slot write = 4, then write → 5. The gap (cells 5..7) holds only zeros waiting to be overwritten.","capB":"right = 7 takes a 1. Window [5..7] has 1 zero ≤ k, length 3."},{"r":8,"mz":{"arr":[1,1,1,1,1,1,0,0,0],"w":6},"win":{"l":5,"zeros":1,"best":4,"span":[0,3]},"capA":"read = 8 sees 1: non-zero, so swap it into slot write = 5, then write → 6. The gap (cells 6..8) holds only zeros waiting to be overwritten.","capB":"right = 8 takes a 1. Window [5..8] has 1 zero ≤ k, length 4."}],"final":[1,1,1,1,1,1,0,0,0],"best":4}};
+const N = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k === "html") e.innerHTML = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null) e.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return e;
+};
+const fmt = x => x < 0 ? "\u2212" + Math.abs(x) : String(x);
+const key = c => c[0] + "," + c[1];
+
+/* ---------------------------------------------------------- hero figure */
+(function hero() {
+  const svg = document.getElementById("heroSvg");
+  const tp = DATA.tp_main, sw = DATA.sw_main, n = tp.a.length;
+  const C = 38, X0 = 52, Y0 = 44;
+  const cx = c => X0 + c * C + C / 2, cy = r => Y0 + r * C + C / 2;
+  let s = "";
+  s += `<text x="${X0 + n * C / 2}" y="16" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">end index →</text>`;
+  s += `<text x="16" y="${Y0 + n * C / 2}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)" transform="rotate(90 16 ${Y0 + n * C / 2})">start index →</text>`;
+  for (let k = 0; k < n; k++) {
+    s += `<text x="${cx(k)}" y="${Y0 - 9}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">${k}</text>`;
+    s += `<text x="${X0 - 12}" y="${cy(k) + 4}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">${k}</text>`;
+  }
+  const tpCells = new Set(tp.frames.filter(f => f.cell).map(f => key(f.cell)));
+  const swCells = new Set(sw.frames.filter(f => f.cell).map(f => key(f.cell)));
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (c < r) continue;
+    const k = r + "," + c;
+    let fill = "var(--surface-2)";
+    if (tpCells.has(k) && swCells.has(k)) fill = "var(--good-soft)";
+    else if (tpCells.has(k)) fill = "var(--tp-soft)";
+    else if (swCells.has(k)) fill = "var(--sw-soft)";
+    s += `<rect x="${X0 + c * C + 2}" y="${Y0 + r * C + 2}" width="${C - 4}" height="${C - 4}" rx="5" fill="${fill}"/>`;
+  }
+  const path = (cells, col) => {
+    const pts = cells.map(c => `${cx(c[1])},${cy(c[0])}`).join(" ");
+    let out = `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+    cells.forEach((c, idx) => { out += `<circle cx="${cx(c[1])}" cy="${cy(c[0])}" r="${idx === 0 ? 5 : 3.2}" fill="${col}"/>`; });
+    return out;
+  };
+  s += path(sw.frames.filter(f => f.cell).map(f => f.cell), "var(--sw)");
+  s += path(tp.frames.filter(f => f.cell).map(f => f.cell), "var(--tp)");
+  const [ar, ac] = tp.result;
+  s += `<rect x="${X0 + ac * C}" y="${Y0 + ar * C}" width="${C}" height="${C}" rx="7" fill="none" stroke="var(--good)" stroke-width="2.5"/>`;
+  const note = (y, col, t, w) => `<text x="${X0 + 4}" y="${y}" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="${w || 400}" fill="${col}">${t}</text>`;
+  s += note(Y0 + 4 * C + 26, "var(--tp-ink)", `two pointers: ${tpCells.size} cells`, 600);
+  s += note(Y0 + 5 * C + 16, "var(--sw-ink)", `window: ${swCells.size} cells`, 600);
+  s += note(Y0 + 6 * C + 16, "var(--ink-3)", `brute force: ${tp.total} pairs, ${sw.total} windows`);
+  s += note(Y0 + 6 * C + 33, "var(--good)", `both stop at (${ar}, ${ac}): ${tp.a[ar]} + ${tp.a[ac]} = ${tp.t}`, 600);
+  s += `<text x="${X0 + n * C + 6}" y="${cy(0) + 4}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--tp-ink)">start</text>`;
+  s += `<text x="${cx(0)}" y="${Y0 - 22}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--sw-ink)">start</text>`;
+  svg.innerHTML = s;
+})();
+
+/* ---------------------------------------------------------- grid panel */
+const META = {
+  tp_main: { label: "Sorted · target 14", title: "Two Sum II", q: "Find i < j with a[i] + a[j] = target." },
+  tp_none: { label: "No pair · target 16", title: "Two Sum II", q: "Find i < j with a[i] + a[j] = target." },
+  sw_main: { label: "Same array · sum ≥ 14", title: "Minimum Size Subarray Sum", q: "Shortest window with sum ≥ target." },
+  sw_unsorted: { label: "Unsorted · sum ≥ 7", title: "Minimum Size Subarray Sum", q: "Shortest window with sum ≥ target." },
+  tp_broken: { label: "Unsorted · target 15", title: "Two Sum II on an unsorted array", q: "Same code. The input breaks its assumption." },
+  sw_broken: { label: "One negative · sum ≥ 12", title: "Min Size Subarray Sum with a negative", q: "Same code. The input breaks its assumption." },
+};
+
+class GridPanel {
+  constructor(root, keys) {
+    this.root = root; this.keys = keys; this.p = 0; this.k = 0; this.timer = null;
+    this.fam = root.dataset.fam;
+    this.build(); this.load(0);
+  }
+  get tr() { return DATA[this.keys[this.p]]; }
+  build() {
+    const m = META[this.keys[0]];
+    this.head = N("div", { class: "panel-head" },
+      N("div", { class: "kicker" }, this.fam === "tp" ? "Converging two pointers" : "Sliding window"),
+      this.h3 = N("h3", {}, m.title),
+      this.qp = N("p", {}, m.q));
+    this.seg = N("div", { class: "seg", role: "group", "aria-label": "Example" });
+    if (this.keys.length > 1) {
+      this.segBtns = this.keys.map((k, idx) => N("button", { type: "button", "aria-pressed": "false", onclick: () => this.load(idx) }, META[k].label));
+      this.seg.append(...this.segBtns);
+    } else {
+      this.seg.append(N("span", { class: "seg-label" }, META[this.keys[0]].label));
+    }
+    this.strip = N("div", { class: "strip" });
+    this.gridEl = N("div", { class: "grid" });
+    const axis = this.fam === "tp" ? "rows: i (left pointer) · columns: j (right pointer)" : "rows: l (window start) · columns: r (window end)";
+    this.statsEl = N("dl", { class: "stats" });
+    this.cap = N("div", { class: "cap", "aria-live": "polite" });
+    this.bBack = N("button", { class: "btn", type: "button", onclick: () => this.go(this.k - 1) }, "← Back");
+    this.bStep = N("button", { class: "btn primary", type: "button", onclick: () => this.go(this.k + 1) }, "Step →");
+    this.bPlay = N("button", { class: "btn", type: "button", onclick: () => this.toggle() }, "Play");
+    this.bReset = N("button", { class: "btn", type: "button", onclick: () => this.go(0) }, "Reset");
+    this.root.append(this.head, this.seg,
+      N("div", { class: "strip-wrap" }, this.strip),
+      N("div", { class: "grid-wrap" }, N("div", { class: "axis" }, axis), this.gridEl),
+      this.statsEl, this.cap,
+      N("div", { class: "ctl" }, this.bStep, this.bBack, this.bPlay, this.bReset));
+  }
+  load(p) {
+    this.stop(); this.p = p; this.k = 0;
+    const m = META[this.keys[p]];
+    this.h3.textContent = m.title; this.qp.textContent = m.q;
+    if (this.segBtns) this.segBtns.forEach((b, i) => b.setAttribute("aria-pressed", i === p ? "true" : "false"));
+    const tr = this.tr, n = tr.a.length;
+    // strip skeleton
+    this.strip.innerHTML = ""; this.mk = []; this.vb = [];
+    for (let x = 0; x < n; x++) {
+      const mk = N("div", { class: "mk" }), v = N("div", { class: "v" + (tr.a[x] < 0 ? " neg" : "") }, fmt(tr.a[x])), ix = N("div", { class: "ix" }, String(x));
+      const col = N("div", { style: "display:grid;grid-template-rows:20px 36px 16px;gap:3px" }, mk, v, ix);
+      this.strip.append(col); this.mk.push(mk); this.vb.push(v);
+    }
+    // grid skeleton
+    this.gridEl.innerHTML = ""; this.cells = {};
+    this.gridEl.style.gridTemplateColumns = `22px repeat(${n}, var(--cell))`;
+    this.gridEl.append(N("div", { class: "lab" }));
+    for (let c = 0; c < n; c++) this.gridEl.append(N("div", { class: "lab" }, String(c)));
+    const truth = new Set(tr.truth.map(key));
+    for (let r = 0; r < n; r++) {
+      this.gridEl.append(N("div", { class: "lab rlab" }, String(r)));
+      for (let c = 0; c < n; c++) {
+        const inDom = this.fam === "tp" ? c > r : c >= r;
+        const cell = N("div", { class: "c" + (inDom ? "" : " off") + (inDom && truth.has(r + "," + c) ? " truth" : ""), title: inDom ? (this.fam === "tp" ? `pair (${r}, ${c})` : `window [${r}..${c}]`) : "" });
+        this.gridEl.append(cell); if (inDom) this.cells[r + "," + c] = cell;
+      }
+    }
+    this.render();
+  }
+  state(k) {
+    const tr = this.tr, comp = new Map(), elim = new Set(), miss = new Set();
+    let fr = null, found = null;
+    for (let x = 0; x < k; x++) {
+      const f = tr.frames[x]; fr = f;
+      if (f.cell) comp.set(key(f.cell), f.s);
+      f.elim.forEach(c => elim.add(key(c)));
+      f.miss.forEach(c => miss.add(key(c)));
+      if (f.verdict === "eq") found = key(f.cell);
+    }
+    if (this.fam === "sw" && fr && fr.verdict === "end" && fr.best) found = key(fr.best);
+    return { comp, elim, miss, fr, found };
+  }
+  render() {
+    const tr = this.tr, n = tr.a.length, st = this.state(this.k), fr = st.fr, F = tr.frames.length;
+    const best = this.fam === "sw" && fr && fr.best ? key(fr.best) : null;
+    for (const [k, cell] of Object.entries(this.cells)) {
+      const cls = ["c"];
+      if (cell.classList.contains("truth")) cls.push("truth");
+      let txt = "";
+      if (st.miss.has(k)) { cls.push("miss"); txt = "✕"; }
+      else if (st.found === k) { cls.push("found"); txt = fmt(st.comp.get(k)); }
+      else if (st.comp.has(k)) { cls.push("cmp"); txt = fmt(st.comp.get(k)); }
+      else if (st.elim.has(k)) cls.push("elim");
+      if (best === k && st.found !== k) cls.push("best");
+      if (fr && fr.cell && key(fr.cell) === k) cls.push("cur");
+      cell.className = cls.join(" "); cell.textContent = txt;
+    }
+    // strip
+    this.mk.forEach(m => m.innerHTML = ""); this.vb.forEach(v => v.classList.remove("end", "win", "best"));
+    const tag = (x, t) => { if (x >= 0 && x < n) this.mk[x].append(N("span", {}, t)); };
+    if (this.fam === "tp") {
+      const i = fr ? fr.i : 0, j = fr ? fr.j : n - 1;
+      tag(i, "i"); tag(j, "j");
+      if (i < n) this.vb[i].classList.add("end"); if (j >= 0) this.vb[j].classList.add("end");
+    } else {
+      const l = fr ? fr.l : 0, r = fr ? fr.r : -1;
+      if (fr && fr.verdict !== "end") { tag(l, "l"); tag(r, "r"); for (let x = l; x <= r; x++) this.vb[x].classList.add("win"); }
+      else if (!fr) tag(0, "l");
+      if (fr && fr.best) for (let x = fr.best[0]; x <= fr.best[1]; x++) this.vb[x].classList.add("best");
+    }
+    // stats
+    const total = tr.total, c = st.comp.size, e = st.elim.size;
+    const unit = this.fam === "tp" ? "pairs" : "windows";
+    this.statsEl.innerHTML = "";
+    [["computed", c], ["ruled out", e], ["unknown", total - c - e], ["total " + unit, total]].forEach(([t, v]) =>
+      this.statsEl.append(N("div", {}, N("dt", {}, t), N("dd", {}, String(v)))));
+    // caption
+    let txt;
+    if (!fr) txt = this.fam === "tp"
+      ? `Start in the top-right corner: i = 0, j = ${n - 1}, target ${tr.t}. Press Step.`
+      : `Start with an empty window at the left edge, l = 0. Target: sum ≥ ${tr.t}. Press Step to grow it.`;
+    else txt = fr.cap;
+    const wrongEnd = tr.truth.length > 0 && (this.fam === "tp" ? !tr.result : (!tr.result || (tr.result[1] - tr.result[0]) !== (tr.truth[0][1] - tr.truth[0][0])));
+    const alarm = fr && (fr.miss.length > 0 || (fr.verdict === "end" && wrongEnd));
+    this.cap.className = "cap" + (alarm ? " alarm" : "");
+    this.cap.innerHTML = "";
+    this.cap.append(N("span", { class: "step" }, fr ? `Step ${this.k} of ${F}` : "Ready"), txt);
+    this.bBack.disabled = this.k === 0; this.bStep.disabled = this.k >= F;
+  }
+  go(k) { const F = this.tr.frames.length; this.k = Math.max(0, Math.min(F, k)); if (this.k >= F) this.stop(); this.render(); }
+  toggle() { if (this.timer) this.stop(); else { if (this.k >= this.tr.frames.length) this.k = 0; this.bPlay.textContent = "Pause"; this.timer = setInterval(() => this.go(this.k + 1), 1100); this.render(); } }
+  stop() { if (this.timer) clearInterval(this.timer); this.timer = null; if (this.bPlay) this.bPlay.textContent = "Play"; }
+}
+new GridPanel(document.getElementById("p1a"), ["tp_main", "tp_none"]);
+new GridPanel(document.getElementById("p1b"), ["sw_main", "sw_unsorted"]);
+new GridPanel(document.getElementById("p2a"), ["tp_broken"]);
+new GridPanel(document.getElementById("p2b"), ["sw_broken"]);
+
+/* ---------------------------------------------------------- lockstep */
+(function lockstep() {
+  const L = DATA.lockstep, root = document.getElementById("lock"), n = L.arr.length;
+  let k = 0, timer = null;
+  const lane = (fam, kicker, title, desc) => {
+    const strip = N("div", { class: "strip" }), cap = N("div", { class: "cap", "aria-live": "polite" });
+    const meaning = N("div", { class: "meaning" });
+    const mk = [], vb = [];
+    for (let x = 0; x < n; x++) {
+      const m = N("div", { class: "mk" }), v = N("div", { class: "v" }), ix = N("div", { class: "ix" }, String(x));
+      strip.append(N("div", { style: "display:grid;grid-template-rows:20px 36px 16px;gap:3px" }, m, v, ix));
+      mk.push(m); vb.push(v);
+    }
+    const el = N("div", { class: "lane", "data-fam": fam },
+      N("div", { class: "lane-head" }, N("div", { class: "kicker" }, kicker), N("h3", {}, title), N("p", {}, desc)),
+      N("div", { class: "lane-body" }, N("div", { class: "strip-wrap" }, strip), meaning, cap));
+    return { el, mk, vb, cap, meaning };
+  };
+  const A = lane("tp", "Read/write pointers · LC 283", "Move Zeroes", "Keep every non-zero in order at the front, in place. The write pointer marks where the next keeper goes.");
+  const B = lane("sw", "Sliding window · LC 1004, k = 1", "Max Consecutive Ones III", "Longest run of ones if you may flip at most one zero. The window is the run you're measuring.");
+  const bBack = N("button", { class: "btn", type: "button", onclick: () => go(k - 1) }, "← Back");
+  const bStep = N("button", { class: "btn primary", type: "button", onclick: () => go(k + 1) }, "Step both →");
+  const bPlay = N("button", { class: "btn", type: "button", onclick: () => toggle() }, "Play");
+  const bReset = N("button", { class: "btn", type: "button", onclick: () => go(0) }, "Reset");
+  root.append(A.el, B.el, N("div", { class: "ctl" }, bStep, bBack, bPlay, bReset));
+  function render() {
+    const f = L.frames[k], r = f.r, F = L.frames.length - 1;
+    // lane A
+    A.mk.forEach(m => m.innerHTML = ""); A.vb.forEach(v => v.className = "v");
+    f.mz.arr.forEach((x, i) => A.vb[i].textContent = x);
+    const w = f.mz.w;
+    if (r >= 0) for (let x = w; x <= r; x++) A.vb[x].classList.add("junk");
+    if (w < n) A.mk[w].append(N("span", {}, "w"));
+    if (r >= 0) A.mk[r].append(N("span", { class: "alt" }, "r"));
+    A.meaning.innerHTML = "";
+    const span = (x, y) => x === y ? `cell ${x}` : `cells ${x}..${y}`;
+    A.meaning.append(N("span", { class: "tag tp" }, "the gap"), r >= w ? `${span(w, r)}: junk waiting to be overwritten` : "empty so far");
+    A.cap.innerHTML = ""; A.cap.append(N("span", { class: "step" }, r < 0 ? "Ready" : `Step ${k} of ${F}`), f.capA);
+    // lane B
+    B.mk.forEach(m => m.innerHTML = ""); B.vb.forEach(v => v.className = "v");
+    L.arr.forEach((x, i) => B.vb[i].textContent = x);
+    const l = f.win.l;
+    if (r >= 0) { for (let x = l; x <= r; x++) B.vb[x].classList.add("win"); B.mk[l].append(N("span", {}, "l")); B.mk[r].append(N("span", {}, "r")); }
+    if (f.win.span) for (let x = f.win.span[0]; x <= f.win.span[1]; x++) B.vb[x].classList.add("best");
+    B.meaning.innerHTML = "";
+    B.meaning.append(N("span", { class: "tag sw" }, "the gap"), r >= 0 ? `${span(l, r)}: the answer being measured` : "empty so far",
+      N("span", { class: "tag good" }, `best ${f.win.best}`));
+    B.cap.innerHTML = ""; B.cap.append(N("span", { class: "step" }, r < 0 ? "Ready" : `Step ${k} of ${F}`), f.capB);
+    bBack.disabled = k === 0; bStep.disabled = k >= F;
+  }
+  function go(x) { const F = L.frames.length - 1; k = Math.max(0, Math.min(F, x)); if (k >= F) stop(); render(); }
+  function toggle() { if (timer) stop(); else { if (k >= L.frames.length - 1) k = 0; bPlay.textContent = "Pause"; timer = setInterval(() => go(k + 1), 1300); render(); } }
+  function stop() { if (timer) clearInterval(timer); timer = null; bPlay.textContent = "Play"; }
+  render();
+})();
+
+/* ---------------------------------------------------------- decision flow */
+const QS = {
+  q1: { q: "Is the answer a contiguous run, a subarray or substring?", hint: "Neighbours only. If the answer may skip elements, it is not a run.", opts: [["Yes, a run", "q2"], ["No", "q5"]] },
+  q2: { q: "Does validity move one way as the run changes?", hint: "Growing the run can only break it, or only fix it. True for sums of non-negative values and for \u201cat most k\u201d counts. False for sums when values can be negative.", opts: [["Yes, it's monotone", "q3"], ["No: negatives, or an exact sum", "r_prefix"]] },
+  q3: { q: "Does each window have to report its maximum or minimum?", hint: "A sum, a count or a set of characters can be updated in O(1) when one element leaves. A maximum can't.", opts: [["Yes", "r_deque"], ["No, a sum, count or set is enough", "q4"]] },
+  q4: { q: "Is the length fixed?", hint: "", opts: [["Yes, exactly k", "r_fixed"], ["No: longest, shortest, or count them", "r_var"]] },
+  q5: { q: "Are you choosing a pair or triple of elements by their values?", hint: "Sum to a target, closest sum, count pairs, triangle sides, boats of two.", opts: [["Yes", "q6"], ["No", "q7"]] },
+  q6: { q: "Are you allowed to sort?", hint: "Yes if the answer is values or a count, or if you carry each original index along. No if you must return original positions in O(n).", opts: [["Yes", "r_conv"], ["No, I need original positions in O(n)", "r_hash"]] },
+  q7: { q: "What is the job?", hint: "", opts: [["Rewrite one array in place", "r_rw"], ["Walk two sequences together", "r_two"], ["Find one value in sorted data", "r_bs"]] },
+};
+const RS = {
+  r_var: { fam: "sw", name: "Variable sliding window", loop: "for right in range(n):\n    add(a[right])\n    while invalid():\n        remove(a[left]); left += 1\n    record()", tell: "Longest, shortest or a count, over a run whose validity is monotone.", note: "For \u201cexactly k\u201d, count at_most(k) \u2212 at_most(k \u2212 1).", eg: "LC 3 · 209 · 424 · 904 · 1004 · 713", link: ["Sliding Window Workbench", "https://claude.ai/code/artifact/62f47fe7-71d6-4a86-9976-ed5caf2fe87f"] },
+  r_fixed: { fam: "sw", name: "Fixed-length sliding window", loop: "for right in range(n):\n    add(a[right])\n    if right >= k:\n        remove(a[right - k])\n    if right >= k - 1:\n        record()", tell: "Every run of exactly k elements.", note: "Keep a Counter and delete keys that reach zero, so len(counter) stays the number of distinct items.", eg: "LC 643 · 567 · 438 · 2461", link: ["Sliding Window Workbench", "https://claude.ai/code/artifact/62f47fe7-71d6-4a86-9976-ed5caf2fe87f"] },
+  r_deque: { fam: "sw", name: "Window plus monotonic deque", loop: "for right, x in enumerate(a):\n    while dq and a[dq[-1]] <= x:\n        dq.pop()\n    dq.append(right)\n    if dq[0] <= right - k:\n        dq.popleft()", tell: "The window must answer \u201cwhat's the max (or min) in here?\u201d", note: "Same window skeleton; only the state changes. The front of the deque is always the answer.", eg: "LC 239 · 1438", link: ["USACO Guide: sliding window maximum", "https://usaco.guide/gold/sliding-window"] },
+  r_prefix: { fam: "ot", name: "Prefix sum plus hash map", loop: "seen = Counter({0: 1}); p = 0\nfor x in a:\n    p += x\n    count += seen[p - k]\n    seen[p] += 1", tell: "Negatives or an exact target break monotonicity, so no window.", note: "Shortest run with negatives: prefix sums plus a monotonic deque (LC 862).", eg: "LC 560 · 523 · 862", link: ["Hello Interview: prefix sum", "https://www.hellointerview.com/learn/code/prefix-sum/overview"] },
+  r_conv: { fam: "tp", name: "Sort, then converging two pointers", loop: "a.sort()\ni, j = 0, len(a) - 1\nwhile i < j:\n    compare a[i] + a[j] with target\n    move the end that is ruled out", tell: "Only the two ends matter, and sorted order lets one comparison rule out a whole row or column.", note: "For k-sum, fix one element and converge on the rest.", eg: "LC 167 · 15 · 16 · 611 · 881 · 977", link: ["Two Pointers Workbench", "https://claude.ai/code/artifact/869b8502-53a4-497f-a75d-2a1ccdd8bc8e"] },
+  r_hash: { fam: "ot", name: "Hash map", loop: "seen = {}\nfor j, x in enumerate(a):\n    if target - x in seen:\n        return seen[target - x], j\n    seen[x] = j", tell: "Unsorted input, and you must return original positions in one pass.", note: "Two pointers still works at O(n log n) if you sort (value, index) pairs.", eg: "LC 1 · 219", link: null },
+  r_rw: { fam: "tp", name: "Read/write pointers", loop: "write = 0\nfor read in range(n):\n    if keep(a[read]):\n        a[write] = a[read]\n        write += 1", tell: "The gap between the pointers is junk waiting to be overwritten.", note: "Section 3 shows why this is not a window.", eg: "LC 26 · 27 · 80 · 283", link: ["Two Pointers Workbench", "https://claude.ai/code/artifact/869b8502-53a4-497f-a75d-2a1ccdd8bc8e"] },
+  r_two: { fam: "tp", name: "Two-sequence pointers", loop: "i = j = 0\nwhile i < len(s) and j < len(t):\n    advance whichever side is behind", tell: "One pointer per input; they never index the same array.", note: "Merging in place? Fill from the back so nothing is overwritten early.", eg: "LC 88 · 392 · 844", link: null },
+  r_bs: { fam: "ot", name: "Binary search", loop: "lo, hi = 0, len(a) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2", tell: "One target in sorted data, with no pair or run involved.", note: "", eg: "LC 704 · 35", link: null },
+};
+(function decide() {
+  const card = document.getElementById("qcard"), res = document.getElementById("result");
+  let path = [];   // [[qid, answerText, next]]
+  function show() {
+    const cur = path.length ? path[path.length - 1][2] : "q1";
+    card.innerHTML = "";
+    if (path.length) {
+      const ol = N("ol", { class: "trail" });
+      path.forEach(([qid, ans], idx) => ol.append(N("li", {}, N("button", { type: "button", onclick: () => { path = path.slice(0, idx); show(); } },
+        N("b", {}, "Q" + (idx + 1)), `${QS[qid].q} \u2192 ${ans}`))));
+      card.append(ol);
+    }
+    if (QS[cur]) {
+      const q = QS[cur];
+      card.append(N("div", { class: "kicker" }, `Question ${path.length + 1}`), N("div", { class: "qtext" }, q.q));
+      if (q.hint) card.append(N("p", { class: "qhint" }, q.hint));
+      card.append(N("div", { class: "opts" }, q.opts.map(([t, nx]) => N("button", { class: "opt", type: "button", onclick: () => { path.push([cur, t, nx]); show(); } }, t))));
+      res.className = "result idle"; res.removeAttribute("data-fam");
+      res.innerHTML = "<p>The pattern appears here once you reach it, with its loop header, the tell to look for, and problems that use it.</p>";
+    } else {
+      const r = RS[cur];
+      card.append(N("div", { class: "kicker" }, "Reached a pattern"), N("p", { class: "qhint" }, "Click any step in the trail to change that answer."),
+        N("div", { class: "ctl" }, N("button", { class: "btn", type: "button", onclick: () => { path = []; show(); } }, "Start again")));
+      res.className = "result"; res.dataset.fam = r.fam; res.innerHTML = "";
+      const famName = { tp: "Two-pointer family", sw: "Window family", ot: "Neither" }[r.fam];
+      res.append(N("span", { class: "tag " + r.fam, style: "justify-self:start" }, famName), N("h3", {}, r.name),
+        N("div", { class: "loop" }, r.loop), N("p", {}, N("strong", {}, "The tell: "), r.tell));
+      if (r.note) res.append(N("p", {}, r.note));
+      res.append(N("div", { class: "eg" }, r.eg));
+      if (r.link) res.append(N("p", {}, N("a", { href: r.link[1], target: "_blank", rel: "noopener" }, r.link[0] + " \u2192")));
+    }
+  }
+  show();
+})();
+
+/* ---------------------------------------------------------- twins */
+const TWINS = [
+  { h: "A pair or a run", L: ["LC 167", "Sorted array. Find two numbers that add up to target."], R: ["LC 209", "Positive array. Find the shortest contiguous subarray with sum \u2265 target."],
+    v: ["tp", "Converging pointers", "sw", "Sliding window"], why: "\u201cTwo numbers\u201d are two cells anywhere; a \u201ccontiguous subarray\u201d is everything between two indices, so its contents matter. Both hit the same cell in section 1 by different routes." },
+  { h: "Sorted, or you need positions", L: ["LC 167", "Sorted array. Return the 1-indexed positions of two numbers summing to target."], R: ["LC 1", "Unsorted array. Return the indices of two numbers summing to target."],
+    v: ["tp", "Converging pointers", "ot", "Hash map"], why: "Sorting LC 1 scrambles the indices you must return. A hash map answers in one pass. Sorting (value, index) pairs also works, at O(n log n)." },
+  { h: "Positive, or not", L: ["LC 209", "Positive integers. Shortest subarray with sum \u2265 target."], R: ["LC 862", "Integers, possibly negative. Shortest subarray with sum \u2265 k."],
+    v: ["sw", "Sliding window", "ot", "Prefix sum + deque"], why: "With a negative inside, dropping it raises the sum, so a failing window no longer proves its shorter cousins fail. Section 2's right-hand panel is exactly this bug." },
+  { h: "A bound, or an exact sum", L: ["LC 713", "Positive integers. Count subarrays whose product is less than k."], R: ["LC 560", "Integers, possibly negative. Count subarrays whose sum is exactly k."],
+    v: ["sw", "Sliding window", "ot", "Prefix sum + hash"], why: "\u201cLess than\u201d over positives is monotone: every sub-window of a valid window is valid, so add right \u2212 left + 1 per step. \u201cExactly\u201d with negatives is not, so count matching prefix sums instead." },
+  { h: "What the gap means", L: ["LC 283", "Move every zero to the end in place, keeping the order of the rest."], R: ["LC 1004", "0/1 array. Longest run of ones if you may flip at most k zeros."],
+    v: ["tp", "Read/write pointers", "sw", "Sliding window"], why: "Both pointers move right in both problems. In 283 the gap is junk to overwrite; in 1004 the gap is the answer. Section 3 runs them in lockstep." },
+  { h: "Taking from the ends", L: ["LC 881", "Each boat carries at most two people under a weight limit. Fewest boats?"], R: ["LC 1658", "Remove from either end, subtracting each value from x. Fewest removals to reach exactly 0? All values positive."],
+    v: ["tp", "Converging pointers", "sw", "Sliding window"], why: "In 881 you pair the heaviest with the lightest, a decision about two ends, so converge. In 1658 whatever you remove leaves a contiguous middle with sum total \u2212 x, so look for the longest such window." },
+  { h: "In order, or in any order", L: ["LC 392", "Is s a subsequence of t?"], R: ["LC 567", "Does s2 contain a permutation of s1 as a substring?"],
+    v: ["tp", "Two-sequence pointers", "sw", "Fixed window"], why: "A subsequence keeps order and allows gaps, so walk both strings with one pointer each. A permutation substring allows no gaps but any order, so slide a window of length len(s1) and compare letter counts." },
+  { h: "Counting by widths", L: ["LC 611", "Count triples that can be the sides of a triangle."], R: ["LC 713", "Positive integers. Count subarrays whose product is less than k."],
+    v: ["tp", "Converging pointers", "sw", "Sliding window"], why: "Both add a whole width per step. In 611, after sorting, if a[i] + a[j] > a[k] then every i\u2032 from i to j \u2212 1 works too: count += j \u2212 i. In 713 every window ending at right and starting at or after left is valid: count += right \u2212 left + 1." },
+];
+(function twins() {
+  const list = document.getElementById("twinList");
+  TWINS.forEach((t, idx) => {
+    const side = s => N("div", { class: "side" }, N("span", { class: "lc" }, s[0]), N("p", {}, s[1]));
+    const det = N("details", {}, N("summary", {}, "Show the patterns and the deciding word"),
+      N("div", { class: "reveal" },
+        N("div", { class: "verdicts" }, N("span", { class: "tag " + t.v[0], style: "justify-self:start" }, `${t.L[0]}: ${t.v[1]}`), N("span", { class: "tag " + t.v[2], style: "justify-self:start" }, `${t.R[0]}: ${t.v[3]}`)),
+        N("p", {}, t.why)));
+    list.append(N("article", { class: "twin" }, N("div", { class: "twin-h" }, t.h), N("div", { class: "sides" }, side(t.L), side(t.R)), det));
+  });
+})();
+
+/* ---------------------------------------------------------- drill */
+const CATS = [
+  ["conv", "Converging pointers", "tp"], ["rw", "Read/write pointers", "tp"], ["two", "Two-sequence pointers", "tp"],
+  ["win", "Sliding window", "sw"], ["deq", "Window + deque", "sw"], ["pre", "Prefix sum + hash", "ot"], ["hash", "Hash map", "ot"],
+];
+const DRILL = [
+  { p: "An integer array sorted in non-decreasing order, possibly with negatives. Return the squares of every number, also sorted.", a: "conv", lc: "LC 977 Squares of a Sorted Array", why: "The largest square is at one of the two ends, so compare the ends and fill the output from the back." },
+  { p: "Count the subarrays whose sum is exactly k. Values can be negative.", a: "pre", lc: "LC 560 Subarray Sum Equals K", why: "An exact sum with negatives isn't monotone, so no window. Count earlier prefix sums equal to p \u2212 k." },
+  { p: "Return the maximum of every block of k consecutive elements.", a: "deq", lc: "LC 239 Sliding Window Maximum", why: "A fixed window whose state must report a max. A deque of indices keeps the max at its front." },
+  { p: "Does s2 contain some rearrangement of s1 as a contiguous substring?", a: "win", lc: "LC 567 Permutation in String", why: "Contiguous, fixed length len(s1), order free: slide a window and compare letter counts." },
+  { p: "People have weights. Each boat carries at most two people and has a weight limit. What is the fewest number of boats?", a: "conv", lc: "LC 881 Boats to Save People", why: "Sort, then pair the heaviest with the lightest if they fit. One comparison settles the heaviest person either way." },
+  { p: "In one move, remove the leftmost or the rightmost element and subtract it from x. All values are positive. What is the fewest moves to make x exactly 0?", a: "win", lc: "LC 1658 Minimum Operations to Reduce X to Zero", why: "Whatever you remove leaves a contiguous middle. Find the longest middle with sum total \u2212 x; positive values keep the window legal." },
+  { p: "nums1 is sorted and has empty slots at its end; nums2 is sorted. Merge nums2 into nums1 in place.", a: "two", lc: "LC 88 Merge Sorted Array", why: "One pointer per sorted input, filling nums1 from the back so nothing is overwritten before it's read." },
+  { p: "An array of positive integers. Count the contiguous subarrays whose product is strictly less than k.", a: "win", lc: "LC 713 Subarray Product Less Than K", why: "Positive values make the product monotone. Shrink while the product is too big, then add right \u2212 left + 1." },
+  { p: "An unsorted array. Return the indices of the two numbers that add up to target.", a: "hash", lc: "LC 1 Two Sum", why: "Unsorted and you must return positions: one pass with a value \u2192 index map." },
+  { p: "Is s a subsequence of t?", a: "two", lc: "LC 392 Is Subsequence", why: "Walk t once and advance a pointer in s on each match. Two sequences, one pointer each." },
+  { p: "Remove every occurrence of val from the array in place and return how many elements remain.", a: "rw", lc: "LC 27 Remove Element", why: "Copy keepers to the write position. The gap behind the read pointer is junk, not an answer." },
+  { p: "Find the maximum sum of any length-k subarray whose elements are all distinct.", a: "win", lc: "LC 2461 Maximum Sum of Distinct Subarrays With Length K", why: "Fixed length k. Slide it, keep a running sum and a Counter, and accept a window when len(counter) == k." },
+];
+(function drill() {
+  const card = document.getElementById("drillCard");
+  let order = DRILL.map((_, i) => i), at = 0, score = 0, answered = false, misses = [];
+  const catName = id => CATS.find(c => c[0] === id)[1];
+  function shuffle() { for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } }
+  function show() {
+    card.innerHTML = "";
+    if (at >= order.length) {
+      card.append(N("div", { class: "summary" },
+        N("div", { class: "kicker" }, "Done"),
+        N("div", { class: "score" }, `${score} of ${order.length}`),
+        N("p", {}, score >= 10 ? "On target. Move on to the timed set." : "Below 10. Redo the twins in section 5, then try again tomorrow rather than straight away."),
+        misses.length ? N("ul", {}, misses.map(i => N("li", {}, `${DRILL[i].lc}: ${catName(DRILL[i].a)}. ${DRILL[i].why}`))) : null,
+        N("div", { class: "ctl" }, N("button", { class: "btn primary", type: "button", onclick: () => { shuffle(); at = 0; score = 0; misses = []; answered = false; show(); } }, "Shuffle and try again"))));
+      return;
+    }
+    const d = DRILL[order[at]];
+    const bar = N("div", { class: "bar" }, N("i", { style: `width:${(at / order.length) * 100}%` }));
+    card.append(N("div", { class: "drill-top" }, N("span", {}, `Prompt ${at + 1} of ${order.length}`), N("span", {}, `Score ${score}`)), bar,
+      N("div", { class: "prompt" }, d.p));
+    const btns = CATS.map(([id, name, fam]) => N("button", { class: "choice", type: "button", onclick: () => pick(id) }, N("i", { class: "dot " + fam }), name));
+    card.append(N("div", { class: "choices" }, btns));
+    const fbSlot = N("div"); card.append(fbSlot);
+    function pick(id) {
+      if (answered) return; answered = true;
+      const ok = id === d.a; if (ok) score++; else misses.push(order[at]);
+      btns.forEach((b, i) => { b.disabled = true; if (CATS[i][0] === d.a) b.classList.add("right"); else if (CATS[i][0] === id) b.classList.add("wrong"); });
+      fbSlot.append(N("div", { class: "fb " + (ok ? "ok" : "no") },
+        N("b", {}, ok ? "Right." : `Not quite. It's ${catName(d.a)}.`), N("span", {}, d.why), N("span", { class: "lc" }, d.lc)));
+      const next = N("button", { class: "btn primary", type: "button", onclick: () => { at++; answered = false; show(); } }, at + 1 < order.length ? "Next prompt →" : "See score");
+      fbSlot.append(N("div", { class: "ctl", style: "margin-top:12px" }, next));
+      next.focus();
+    }
+  }
+  show();
+})();
+</script>
+
+</body></html>
