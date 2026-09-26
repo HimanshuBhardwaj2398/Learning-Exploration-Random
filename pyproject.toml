@@ -1,0 +1,27 @@
+[project]
+name = "learning-exploration"
+version = "0.1.0"
+description = "Himanshu's learning notebooks: DSA patterns and questions, Python concepts, and more."
+requires-python = ">=3.11"
+dependencies = ["marimo==0.25.0"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "markdown-it-py==4.2.0",
+    "mdit-py-plugins==0.6.1",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["learnkit"]
+
+[tool.pytest.ini_options]
+# Notebooks and solution files don't follow the test_*.py naming, so collect every .py;
+# marimo's pytest plugin runs the test_ functions defined inside notebook cells.
+testpaths = ["learnkit", "tools", "DSA", "python"]
+python_files = ["*.py"]
+addopts = "-q --import-mode=importlib"
