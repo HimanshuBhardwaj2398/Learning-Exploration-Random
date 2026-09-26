@@ -18,11 +18,12 @@ Answer keys are tested the same way from a notebook test cell:
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import html as _html
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Iterator, Sequence
 
 DEFAULT_BUDGET = 300_000  # executed lines per test case before we call it an infinite loop
 
@@ -54,7 +55,32 @@ class LineBudgetExceeded(Exception):
     """Raised inside the learner's code when it runs too many lines."""
 
 
+@contextlib.contextmanager
+def recursion_guard(headroom: int = 200) -> Iterator[None]:
+    """Cap recursion at (current depth + headroom) while learner code runs.
+
+    In the browser (Pyodide), runaway recursion overflows the JavaScript stack and
+    kills the whole notebook before Python can raise RecursionError. A lower limit
+    turns it back into an ordinary RecursionError that the runner can report.
+    """
+    depth, frame = 0, sys._getframe()
+    while frame is not None:
+        depth += 1
+        frame = frame.f_back
+    previous = sys.getrecursionlimit()
+    sys.setrecursionlimit(min(previous, depth + headroom))
+    try:
+        yield
+    finally:
+        sys.setrecursionlimit(previous)
+
+
 def _call_with_budget(fn: Callable, args: tuple, budget: int) -> tuple[Any, int]:
+    with recursion_guard():
+        return _traced_call(fn, args, budget)
+
+
+def _traced_call(fn: Callable, args: tuple, budget: int) -> tuple[Any, int]:
     count = 0
 
     def tracer(frame, event, arg):  # noqa: ARG001 - signature fixed by sys.settrace
